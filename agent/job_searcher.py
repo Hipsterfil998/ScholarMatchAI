@@ -166,14 +166,20 @@ def _search_mlscientist(field: str, location: str, position_type: str) -> list[d
     listings: list[dict] = []
     seen_urls: set[str] = set()
 
+    # Non-type category slugs to ignore when extracting country from CSS classes
+    _MLSCI_NON_COUNTRY = {
+        "jobs", "phd-positions", "postdoc-positions", "featured",
+        "conference-calls", "mlnews",
+    }
+
     for url in urls_to_try:
         try:
             resp = requests.get(url, headers=_HEADERS, timeout=15)
             if resp.status_code != 200:
                 continue
             soup = BeautifulSoup(resp.text, "lxml")
-            for card in soup.select("article.cm-entry-summary")[:15]:
-                title_el = card.select_one("h3.cm-entry-title a, h2.cm-entry-title a")
+            for card in soup.select("article.type-post")[:15]:
+                title_el = card.select_one(".entry-title a, h3 a, h2 a, h1 a")
                 if not title_el:
                     continue
                 href = title_el.get("href", "")
@@ -181,20 +187,32 @@ def _search_mlscientist(field: str, location: str, position_type: str) -> list[d
                     continue
                 seen_urls.add(href)
 
-                excerpt_el = card.select_one(".cm-entry-summary-text, .entry-summary, p")
+                excerpt_el = card.select_one(".entry-summary, .entry-content p, p")
                 excerpt = excerpt_el.get_text(strip=True) if excerpt_el else ""
 
-                # Extract location from "Location: X" pattern in excerpt
-                loc_match = re.search(r"location[:\s]+([^\n|]+)", excerpt, re.IGNORECASE)
-                loc_text = loc_match.group(1).strip() if loc_match else location
+                # Country from CSS category classes (e.g. category-germany)
+                card_classes = card.get("class", [])
+                country_cats = [
+                    cl.replace("category-", "").replace("-", " ").title()
+                    for cl in card_classes
+                    if cl.startswith("category-") and cl.replace("category-", "") not in _MLSCI_NON_COUNTRY
+                ]
+                loc_text = country_cats[0] if country_cats else location
 
-                # Extract deadline from "Deadline: X" pattern
-                deadline_match = re.search(r"deadline[:\s]+([^\n|]+)", excerpt, re.IGNORECASE)
+                # Filter by requested country when a specific one is set
+                if (
+                    location.lower() not in ("worldwide", "europe", "europe (all)", "")
+                    and country_slug
+                    and country_slug not in card_classes
+                ):
+                    continue
+
+                # Extract deadline — stop at end of date (after year or ~25 chars)
+                deadline_match = re.search(
+                    r"deadline[:\s]+(\d{1,2}\s+\w+\s+\d{4}|\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}/\d{1,2}/\d{4})",
+                    excerpt, re.IGNORECASE,
+                )
                 deadline = deadline_match.group(1).strip() if deadline_match else None
-
-                date_el = card.select_one(".cm-entry-date, time")
-                if not deadline and date_el:
-                    deadline = date_el.get_text(strip=True)
 
                 title_text = title_el.get_text(strip=True)
                 listings.append({
@@ -523,14 +541,18 @@ class JobSearcher:
         phrases = [p.strip().lower() for p in re.split(r"[,/]", field) if p.strip()]
 
         def _field_matches(listing: dict) -> bool:
-            text = (
-                (listing.get("title") or "") + " " + (listing.get("description") or "")
-            ).lower()
+            # Check title first (most reliable); fall back to description for
+            # sources whose server-side search may return short excerpts
+            title = (listing.get("title") or "").lower()
+            desc = (listing.get("description") or "").lower()
             for phrase in phrases:
-                if phrase in text:
+                if phrase in title:
                     return True
                 words = [w for w in re.split(r"\s+", phrase) if len(w) >= 4 and w not in _stop]
-                if words and all(w in text for w in words):
+                # ALL words must appear in title OR all in description
+                if words and all(w in title for w in words):
+                    return True
+                if words and all(w in desc for w in words):
                     return True
             return False
 
