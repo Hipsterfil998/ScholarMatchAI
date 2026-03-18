@@ -516,15 +516,25 @@ class JobSearcher:
 
         all_listings = _deduplicate(all_listings)
 
-        # Post-filter: keep only listings that mention the field in title or description
-        field_keywords = [kw.strip().lower() for kw in re.split(r"[,/]", field) if kw.strip()]
-        all_listings = [
-            j for j in all_listings
-            if any(
-                kw in (j.get("title") or "").lower() or kw in (j.get("description") or "").lower()
-                for kw in field_keywords
-            )
-        ]
+        # Post-filter: keep only listings that mention the field in title or description.
+        # For each comma/slash-separated phrase: match exact phrase OR require ALL
+        # individual words ≥4 chars to appear (AND logic — avoids single-word false positives).
+        _stop = {"and", "the", "for", "with", "from", "into", "using", "based", "applied"}
+        phrases = [p.strip().lower() for p in re.split(r"[,/]", field) if p.strip()]
+
+        def _field_matches(listing: dict) -> bool:
+            text = (
+                (listing.get("title") or "") + " " + (listing.get("description") or "")
+            ).lower()
+            for phrase in phrases:
+                if phrase in text:
+                    return True
+                words = [w for w in re.split(r"\s+", phrase) if len(w) >= 4 and w not in _stop]
+                if words and all(w in text for w in words):
+                    return True
+            return False
+
+        all_listings = [j for j in all_listings if _field_matches(j)]
 
         # Post-filter by position_type if site didn't apply it natively
         if pt != "any":
