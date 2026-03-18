@@ -12,13 +12,39 @@ license: mit
 
 # PhdScout 🎓
 
-AI-powered search agent for PhD positions, postdocs, research fellowships, and academic staff roles.
+**AI-powered search agent for PhD positions, postdocs, research fellowships, and academic staff roles.**
 
-Upload your CV, specify a research field and country, and the agent will:
-- Search multiple academic job boards for open positions
-- Score each position against your profile (0–100)
-- Generate a personalized cover letter draft for every position you select
-- Export all application materials as a ZIP
+> 🆓 **100% free** — no subscriptions, no API costs, no sign-up required.
+> Live demo on HuggingFace Spaces: [HipFil98/research-job-agent](https://huggingface.co/spaces/HipFil98/research-job-agent)
+
+---
+
+## Features
+
+| | |
+|-|-|
+| 🔍 **Multi-source search** | Scrapes Euraxess, mlscientist.com, jobs.ac.uk, and the web in one click |
+| 🌍 **Location filtering** | 40+ countries and regions, or type any custom location |
+| 🎯 **Position type filter** | PhD, predoctoral, postdoc, fellowship, research staff |
+| 🤖 **AI match scoring** | Each position scored 0–100 against your CV profile |
+| 📋 **CV tailoring hints** | Actionable, position-specific suggestions to improve your application |
+| ✉️ **Cover letter drafts** | Personalized letter generated for every position, fully editable |
+| 📦 **ZIP export** | Download all approved cover letters and position details in one archive |
+| 🆓 **Completely free** | Runs on free HuggingFace Inference API models — no account or payment needed |
+
+---
+
+## What it does
+
+Upload your CV, set a research field and country, and PhdScout will:
+
+- **Search** multiple academic job boards for open positions
+- **Score** each position against your profile (0–100 match score)
+- **Rank** all results and highlight the best fits
+- **Generate** a personalized cover letter draft for every position
+- **Export** all approved applications as a ZIP (cover letters + position details)
+
+---
 
 ## Job sources
 
@@ -29,23 +55,84 @@ Upload your CV, specify a research field and country, and the agent will:
 | [jobs.ac.uk](https://www.jobs.ac.uk) | UK academic jobs (queried only when UK is selected) |
 | DuckDuckGo web search | Targeted queries for open calls by field, country, and position type |
 
+---
+
 ## How to use
+
 1. Upload your CV (PDF, DOCX, or TXT)
-2. Enter your research field (e.g. "machine learning", "computational biology")
+2. Enter your research field (e.g. `machine learning`, `computational biology`)
 3. Select a country or region from the dropdown (40+ options, or type a custom value)
-4. Choose the position type and minimum match score
-5. Click **Parse CV & Search Positions** and wait (~2–3 minutes)
-6. In the **Results** tab, review all found positions and their scores
-7. In the **Review & Edit** tab, load each position, read the tailoring hints, and edit the cover letter
-8. Click **Approve & Save** for positions you want to apply to
-9. In the **Export** tab, download all approved applications as a ZIP
+4. Choose the position type (`PhD`, `postdoc`, `fellowship`, `predoctoral`, `research staff`)
+5. Set a minimum match score (used as a recommendation threshold — all positions are reviewable)
+6. Click **Parse CV & Search Positions** and wait (~2–3 minutes)
+7. In the **Results** tab, browse all found positions and the recommended shortlist
+8. In the **Review & Edit** tab, load any position, read CV tailoring hints, and edit the cover letter
+9. Click **Approve & Save** for positions you want to apply to
+10. In the **Export** tab, download all approved applications as a ZIP
+
+---
+
+## Running locally
+
+```bash
+git clone https://github.com/Hipsterfil998/PhDScout.git
+cd PhDScout
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+
+```env
+LLM_BACKEND=huggingface
+HF_API_KEY=your_huggingface_token
+```
+
+Then run:
+
+```bash
+python app.py
+```
+
+The app will be available at `http://localhost:7860`.
+
+---
+
+## Project structure
+
+```
+PhDScout/
+├── app.py                  # Gradio web interface
+├── config.py               # Configuration (env vars, defaults)
+├── requirements.txt
+├── agent/
+│   ├── pipeline.py         # JobAgent orchestrator
+│   ├── job_searcher.py     # Multi-source job scraper
+│   ├── cv_parser.py        # CV text extraction + LLM parsing
+│   ├── job_matcher.py      # LLM-based position scoring
+│   ├── cv_tailor.py        # CV tailoring hints generator
+│   ├── cover_letter.py     # Cover letter generator
+│   ├── llm_client.py       # Unified LLM client (Ollama / HuggingFace)
+│   └── utils.py            # Shared utilities
+```
+
+---
 
 ## Models
+
 Powered by free [HuggingFace Inference API](https://huggingface.co/inference-api) models — no paid subscription required.
 
-Available models:
-- `Qwen/Qwen2.5-7B-Instruct` (default, recommended)
-- `meta-llama/Llama-3.2-3B-Instruct`
-- `microsoft/Phi-3.5-mini-instruct`
-- `mistralai/Mistral-Nemo-Instruct-2407`
-- `google/gemma-2-9b-it`
+| Model | Notes |
+|-------|-------|
+| `Qwen/Qwen2.5-7B-Instruct` | Default, recommended |
+| `meta-llama/Llama-3.2-3B-Instruct` | Lightweight |
+| `microsoft/Phi-3.5-mini-instruct` | Fast |
+| `mistralai/Mistral-Nemo-Instruct-2407` | Good instruction following |
+| `google/gemma-2-9b-it` | Strong reasoning |
+
+For local use, the app also supports **Ollama** — set `LLM_BACKEND=ollama` in `.env`.
+
+---
+
+## License
+
+MIT
