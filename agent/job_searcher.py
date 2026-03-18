@@ -350,13 +350,11 @@ def _search_euraxess(field: str, location: str, position_type: str) -> list[dict
             deadline_el = card.select_one(".id-Application-Deadline .ecl-text-standard, [class*=deadline]")
             deadline = deadline_el.get_text(strip=True) if deadline_el else posted
 
-            # For non-UK/non-worldwide searches, skip results not in requested country
-            if (
-                country_id == ""
-                and location.lower() not in ("europe", "europe (all)", "worldwide", "")
-                and location.lower() not in loc_text.lower()
-            ):
-                continue
+            # Always post-filter by country when a specific location is requested
+            # (job_country[] param is ignored server-side by Euraxess)
+            if location.lower() not in ("europe", "europe (all)", "worldwide", ""):
+                if location.lower() not in loc_text.lower():
+                    continue
 
             title_text = title_el.get_text(strip=True)
             listings.append({
