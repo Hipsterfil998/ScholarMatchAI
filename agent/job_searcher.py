@@ -279,49 +279,96 @@ def _search_jobs_ac_uk(field: str, location: str, position_type: str) -> list[di
         return []
 
 
-def _search_findaphd(field: str, location: str, position_type: str) -> list[dict]:
-    """FindAPhD — academic job board with separate PhD and non-PhD (postdoc/research) sections."""
-    # Choose the right endpoint based on position type
-    if position_type in ("postdoc", "fellowship", "research_staff"):
-        base_url = "https://www.findaphd.com/non-phd-research/"
-        forced_type = position_type
-    elif position_type == "phd":
-        base_url = "https://www.findaphd.com/phds/"
-        forced_type = "phd"
-    else:  # "any" — search both
-        results = (
-            _search_findaphd(field, location, "phd")
-            + _search_findaphd(field, location, "postdoc")
-        )
-        return results
+# Euraxess country name → numeric ID used in job_country[] filter
+_EURAXESS_COUNTRY_ID: dict[str, str] = {
+    "austria": "791", "belgium": "792", "bulgaria": "746", "croatia": "776",
+    "cyprus": "777", "czech republic": "747", "denmark": "757", "estonia": "758",
+    "finland": "760", "france": "793", "germany": "794", "greece": "779",
+    "hungary": "748", "iceland": "762", "ireland": "763", "israel": "730",
+    "italy": "781", "latvia": "766", "lithuania": "767", "luxembourg": "796",
+    "malta": "782", "netherlands": "798", "norway": "768", "poland": "749",
+    "portugal": "784", "romania": "751", "serbia": "786", "slovakia": "753",
+    "slovenia": "787", "spain": "788", "sweden": "770", "switzerland": "799",
+    "turkey": "739", "uk": "771", "united kingdom": "771",
+    "australia": "802", "brazil": "668", "canada": "682", "china": "694",
+    "india": "705", "japan": "698", "south korea": "700", "singapore": "720",
+    "united states": "804", "usa": "804", "new zealand": "803",
+    "south africa": "740",
+}
 
-    url = f"{base_url}?Keywords={quote_plus(field)}&Location={quote_plus(location)}"
+
+def _search_euraxess(field: str, location: str, position_type: str) -> list[dict]:
+    """Euraxess — EU academic & research job portal, HTML scraping with country filter."""
+    params = [f"keywords={quote_plus(field)}"]
+
+    country_id = _EURAXESS_COUNTRY_ID.get(location.lower(), "")
+    if country_id:
+        params.append(f"job_country[]={country_id}")
+
+    url = "https://euraxess.ec.europa.eu/jobs/search?" + "&".join(params)
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=15)
         if resp.status_code != 200:
             return []
         soup = BeautifulSoup(resp.text, "lxml")
         listings = []
-        for card in soup.select(".phd-result, .row.phd-result, article.phd-result")[:20]:
-            title_el = card.select_one("h3 a, h2 a, .phd-result__title a")
+
+        for card in soup.select("article.ecl-content-item")[:20]:
+            title_el = card.select_one("h3.ecl-content-block__title a, h2.ecl-content-block__title a")
             if not title_el:
                 continue
             href = title_el.get("href", "")
-            full_url = ("https://www.findaphd.com" + href) if href.startswith("/") else href
-            inst_el = card.select_one(".phd-result__dept, .phd-result__uni, .uni-link")
-            desc_el = card.select_one(".phd-result__description, .project-description, p")
-            deadline_el = card.select_one(".deadline, .closing-date, time")
+            full_url = ("https://euraxess.ec.europa.eu" + href) if href.startswith("/") else href
+
+            # Institution: first primary-meta-item (before "Posted on:")
+            meta_items = card.select(".ecl-content-block__primary-meta-item")
+            institution = ""
+            posted = None
+            for mi in meta_items:
+                txt = mi.get_text(strip=True)
+                if txt.startswith("Posted on:"):
+                    posted = txt.replace("Posted on:", "").strip()
+                elif not institution:
+                    institution = txt
+
+            desc_el = card.select_one(".ecl-content-block__description p, .ecl-content-block__description")
             desc = desc_el.get_text(strip=True) if desc_el else ""
+
+            # Location from Work Locations block
+            loc_el = card.select_one(".id-Work-Locations .ecl-text-standard")
+            loc_text = location
+            if loc_el:
+                raw = loc_el.get_text(" ", strip=True)
+                # "Number of offers: 1, Germany, ..." → extract country
+                m = re.search(r"Number of offers[^,]+,\s*([^,]+),", raw)
+                if m:
+                    loc_text = m.group(1).strip()
+                else:
+                    loc_text = raw[:60]
+
+            # Deadline: look for application deadline
+            deadline_el = card.select_one(".id-Application-Deadline .ecl-text-standard, [class*=deadline]")
+            deadline = deadline_el.get_text(strip=True) if deadline_el else posted
+
+            # For non-UK/non-worldwide searches, skip results not in requested country
+            if (
+                country_id == ""
+                and location.lower() not in ("europe", "europe (all)", "worldwide", "")
+                and location.lower() not in loc_text.lower()
+            ):
+                continue
+
+            title_text = title_el.get_text(strip=True)
             listings.append({
-                "title": title_el.get_text(strip=True),
-                "institution": inst_el.get_text(strip=True) if inst_el else "",
-                "location": location,
+                "title": title_text,
+                "institution": institution,
+                "location": loc_text,
                 "url": full_url,
                 "description": desc,
-                "deadline": deadline_el.get_text(strip=True) if deadline_el else None,
+                "deadline": deadline,
                 "email": _extract_email(desc),
-                "source": "findaphd",
-                "type": forced_type,
+                "source": "euraxess",
+                "type": _detect_type(title_text, desc),
             })
         return listings
     except Exception:
@@ -418,7 +465,7 @@ def _search_web(field: str, location: str, position_type: str) -> list[dict]:
 class JobSearcher:
     """Searches for research/PhD positions across academic sources and web.
 
-    Sources: jobs.ac.uk (UK only), FindAPhD (worldwide), mlscientist.com (ML/AI), DuckDuckGo (targeted web search).
+    Sources: jobs.ac.uk (UK only), Euraxess (worldwide), mlscientist.com (ML/AI), DuckDuckGo (targeted web search).
     """
 
     def search(
@@ -445,8 +492,8 @@ class JobSearcher:
 
         # jobs.ac.uk is UK-only: only query it when location is UK or worldwide
         scrapers = [
+            lambda f, l: _search_euraxess(f, l, pt),
             lambda f, l: _search_mlscientist(f, l, pt),
-            lambda f, l: _search_findaphd(f, l, pt),
             lambda f, l: _search_web(f, l, pt),
         ]
         if _is_uk_location(location) or _is_worldwide(location):
