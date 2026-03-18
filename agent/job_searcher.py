@@ -1,6 +1,10 @@
 """Job searcher: finds PhD / postdoc / research positions from free public sources.
 
-Sources: DuckDuckGo, Euraxess, jobs.ac.uk (RSS), FindAPhD, Academic Positions.
+Sources:
+- Euraxess (European Commission research portal) — RSS feed
+- jobs.ac.uk (UK academic jobs) — HTML scraping with facet filters
+- FindAPhD (PhD-specific) — HTML scraping
+
 All scrapers are wrapped in try/except — if one source is down the rest continue.
 """
 
@@ -8,9 +12,10 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, TypedDict
+from typing import TypedDict
 from urllib.parse import quote_plus
 
+import feedparser
 import requests
 from bs4 import BeautifulSoup
 
@@ -28,14 +33,32 @@ class JobListing(TypedDict, total=False):
 
 
 _TYPE_KEYWORDS: dict[str, list[str]] = {
-    "phd": ["phd", "ph.d", "doctoral", "doctorate", "phd student", "phd candidate",
-            "phd position", "phd fellowship", "graduate student"],
-    "postdoc": ["postdoc", "post-doc", "post doc", "postdoctoral", "research associate",
-                "research fellow"],
-    "fellowship": ["fellowship", "stipend", "marie curie", "marie skłodowska",
-                   "horizon europe", "erc", "scholarship"],
-    "research_staff": ["researcher", "research scientist", "research engineer",
-                       "staff scientist", "principal investigator", "pi position"],
+    "phd": [
+        "phd", "ph.d", "doctoral", "doctorate",
+        "phd student", "phd candidate", "phd position",
+        "phd fellowship", "graduate student", "studentship",
+    ],
+    "postdoc": [
+        "postdoc", "post-doc", "post doc", "postdoctoral",
+        "research associate", "research fellow",
+    ],
+    "fellowship": [
+        "fellowship", "stipend", "marie curie", "marie skłodowska",
+        "horizon europe", "erc", "scholarship", "grant",
+    ],
+    "research_staff": [
+        "researcher", "research scientist", "research engineer",
+        "staff scientist", "principal investigator", "pi position",
+        "lecturer", "professor", "faculty",
+    ],
+}
+
+# Position type → keywords appended to search query for sites without native facets
+_TYPE_QUERY: dict[str, str] = {
+    "phd": "PhD",
+    "postdoc": "postdoc OR \"research associate\" OR \"research fellow\"",
+    "fellowship": "fellowship OR scholarship",
+    "research_staff": "researcher OR lecturer OR professor",
 }
 
 _HEADERS = {
@@ -45,7 +68,7 @@ _HEADERS = {
     )
 }
 
-_DELAY = 1.0  # polite delay between HTTP requests (seconds)
+_DELAY = 1.5  # polite delay between HTTP requests (seconds)
 
 
 def _detect_type(title: str, description: str) -> str:
@@ -75,115 +98,130 @@ def _deduplicate(listings: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Source scrapers (module-level private functions)
+# Source scrapers
 # ---------------------------------------------------------------------------
 
-def _search_duckduckgo(field: str, location: str) -> list[dict]:
-    try:
-        from duckduckgo_search import DDGS  # type: ignore
-    except ImportError:
-        return []
+def _search_euraxess(field: str, location: str, position_type: str) -> list[dict]:
+    """Euraxess RSS feed — European research portal (EC)."""
+    query = field
+    if position_type != "any" and position_type in _TYPE_QUERY:
+        query = f"{field} {_TYPE_QUERY[position_type]}"
 
-    queries = [
-        f"PhD position {field} {location} 2025 site:euraxess.ec.europa.eu",
-        f"postdoc {field} {location} 2025 fellowship",
-        f"research position {field} {location} university",
-        f"PhD fellowship {field} site:findaphd.com",
-        f"academic jobs {field} site:jobs.ac.uk",
-    ]
+    rss_url = f"https://euraxess.ec.europa.eu/jobs/search/rss?query={quote_plus(query)}"
 
-    raw: list[dict] = []
-    ddgs = DDGS()
-    for query in queries:
-        try:
-            results = ddgs.text(query, max_results=10)
-            if results:
-                raw.extend(results)
-            time.sleep(_DELAY)
-        except Exception:
-            continue
-
-    return [
-        {
-            "title": r.get("title", ""),
-            "institution": "",
-            "location": location,
-            "url": r.get("href", ""),
-            "description": r.get("body", ""),
-            "deadline": None,
-            "email": _extract_email(r.get("body", "")),
-            "source": "ddg",
-            "type": _detect_type(r.get("title", ""), r.get("body", "")),
-        }
-        for r in raw
-    ]
-
-
-def _search_euraxess(field: str, location: str) -> list[dict]:
-    url = "https://euraxess.ec.europa.eu/api/v1/jobs/search"
-    params: dict[str, Any] = {"keywords": field, "page": 1, "per_page": 20}
+    # Some country codes Euraxess understands; pass through if specific country given
     if location and location.lower() not in ("europe", "anywhere", "worldwide", ""):
-        params["country"] = location
+        rss_url += f"&country={quote_plus(location)}"
 
-    try:
-        resp = requests.get(url, params=params, headers=_HEADERS, timeout=15)
-        if resp.status_code != 200:
-            return []
-        data = resp.json()
-        jobs_raw = data if isinstance(data, list) else data.get("jobs", data.get("data", []))
-        if not isinstance(jobs_raw, list):
-            return []
-
-        return [
-            {
-                "title": job.get("title") or job.get("name") or "",
-                "institution": job.get("organisation") or job.get("institution") or job.get("employer") or "",
-                "location": job.get("location") or job.get("country") or job.get("city") or location,
-                "url": job.get("url") or job.get("link") or "",
-                "description": job.get("description") or job.get("body") or "",
-                "deadline": job.get("application_deadline") or job.get("deadline"),
-                "email": _extract_email(job.get("description") or ""),
-                "source": "euraxess",
-                "type": _detect_type(job.get("title") or "", job.get("description") or ""),
-            }
-            for job in jobs_raw
-        ]
-    except Exception:
-        return []
-
-
-def _search_jobs_ac_uk(field: str, location: str) -> list[dict]:
-    try:
-        import feedparser  # type: ignore
-    except ImportError:
-        return []
-
-    rss_url = (
-        f"https://www.jobs.ac.uk/search/?keywords={quote_plus(field)}"
-        f"&location={quote_plus(location)}&rss=1"
-    )
     try:
         feed = feedparser.parse(rss_url)
-        return [
-            {
-                "title": entry.get("title", ""),
-                "institution": entry.get("author") or entry.get("dc_source") or "",
-                "location": location,
-                "url": entry.get("link", ""),
-                "description": entry.get("summary", ""),
-                "deadline": entry.get("published"),
-                "email": _extract_email(entry.get("summary", "")),
-                "source": "jobs.ac.uk",
-                "type": _detect_type(entry.get("title", ""), entry.get("summary", "")),
-            }
-            for entry in feed.entries[:20]
-        ]
+        listings = []
+        for entry in feed.entries[:25]:
+            title = entry.get("title", "")
+            link = entry.get("link", "")
+            summary = entry.get("summary", "") or entry.get("description", "")
+            # Institution often appears as "author" or in tags
+            institution = entry.get("author", "") or entry.get("dc_source", "")
+            published = entry.get("published", "") or entry.get("updated", "")
+            loc = entry.get("location", "") or location
+            listings.append({
+                "title": title,
+                "institution": institution,
+                "location": loc,
+                "url": link,
+                "description": summary,
+                "deadline": published or None,
+                "email": _extract_email(summary),
+                "source": "euraxess",
+                "type": _detect_type(title, summary),
+            })
+        return listings
     except Exception:
         return []
 
 
-def _search_findaphd(field: str, location: str) -> list[dict]:
-    url = f"https://www.findaphd.com/phds/?Keywords={quote_plus(field)}&Location={quote_plus(location)}"
+def _search_jobs_ac_uk(field: str, location: str, position_type: str) -> list[dict]:
+    """jobs.ac.uk — UK academic jobs, HTML scraping with facet filters."""
+    params = [
+        f"keywords={quote_plus(field)}",
+        "sortOrder=2",   # sort by closing date
+        "pageSize=25",
+    ]
+
+    # Map position_type to jobs.ac.uk jobTypeFacet
+    if position_type == "phd":
+        params.append("jobTypeFacet[]=phds")
+    elif position_type == "postdoc":
+        # No native postdoc facet — append to keywords
+        params[0] = f"keywords={quote_plus(field + ' postdoc')}"
+    elif position_type == "fellowship":
+        params[0] = f"keywords={quote_plus(field + ' fellowship')}"
+    elif position_type == "research_staff":
+        params[0] = f"keywords={quote_plus(field + ' researcher')}"
+
+    if location and location.lower() not in ("anywhere", "worldwide", ""):
+        params.append(f"location={quote_plus(location)}")
+
+    url = "https://www.jobs.ac.uk/search/?" + "&".join(params)
+
+    try:
+        resp = requests.get(url, headers=_HEADERS, timeout=15)
+        if resp.status_code != 200:
+            return []
+        soup = BeautifulSoup(resp.text, "lxml")
+        listings = []
+
+        for card in soup.select("div[data-advert-id], .j-search-result__result")[:25]:
+            title_el = card.select_one(".j-search-result__text > a")
+            if not title_el:
+                continue
+            href = title_el.get("href", "")
+            full_url = ("https://www.jobs.ac.uk" + href) if href.startswith("/") else href
+
+            dept_el = card.select_one(".j-search-result__department")
+            employer_el = card.select_one(".j-search-result__employer b, .j-search-result__employer")
+            date_el = card.select_one(".j-search-result__date--blue")
+            salary_el = card.select_one(".j-search-result__info")
+
+            # Location often in plain text div with "Location:" prefix
+            loc_text = location
+            for div in card.select("div"):
+                t = div.get_text(strip=True)
+                if t.startswith("Location:"):
+                    loc_text = t.replace("Location:", "").strip()
+                    break
+
+            description = " | ".join(filter(None, [
+                dept_el.get_text(strip=True) if dept_el else "",
+                salary_el.get_text(strip=True) if salary_el else "",
+            ]))
+
+            listings.append({
+                "title": title_el.get_text(strip=True),
+                "institution": employer_el.get_text(strip=True) if employer_el else "",
+                "location": loc_text,
+                "url": full_url,
+                "description": description,
+                "deadline": date_el.get_text(strip=True) if date_el else None,
+                "email": None,
+                "source": "jobs.ac.uk",
+                "type": _detect_type(title_el.get_text(strip=True), description),
+            })
+        return listings
+    except Exception:
+        return []
+
+
+def _search_findaphd(field: str, location: str, position_type: str) -> list[dict]:
+    """FindAPhD — PhD-focused academic job board."""
+    # FindAPhD is only relevant for PhD positions
+    if position_type not in ("any", "phd"):
+        return []
+
+    url = (
+        f"https://www.findaphd.com/phds/"
+        f"?Keywords={quote_plus(field)}&Location={quote_plus(location)}"
+    )
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=15)
         if resp.status_code != 200:
@@ -216,48 +254,15 @@ def _search_findaphd(field: str, location: str) -> list[dict]:
         return []
 
 
-def _search_academic_positions(field: str, location: str) -> list[dict]:
-    url = f"https://academicpositions.com/find-jobs/?query={quote_plus(field)}&location={quote_plus(location)}"
-    try:
-        resp = requests.get(url, headers=_HEADERS, timeout=15)
-        if resp.status_code != 200:
-            return []
-        soup = BeautifulSoup(resp.text, "lxml")
-        listings = []
-        for card in soup.select("article.job, .job-item, li.job-listing, .vacancy-item")[:20]:
-            title_el = card.select_one("h2 a, h3 a, .job-title a, a.job-link")
-            if not title_el:
-                continue
-            href = title_el.get("href", "")
-            if href and not href.startswith("http"):
-                href = "https://academicpositions.com" + href
-            inst_el = card.select_one(".employer, .institution, .university")
-            loc_el = card.select_one(".location, .job-location")
-            desc_el = card.select_one(".description, .job-description, p")
-            deadline_el = card.select_one(".deadline, .closing, time")
-            desc = desc_el.get_text(strip=True) if desc_el else ""
-            listings.append({
-                "title": title_el.get_text(strip=True),
-                "institution": inst_el.get_text(strip=True) if inst_el else "",
-                "location": loc_el.get_text(strip=True) if loc_el else location,
-                "url": href,
-                "description": desc,
-                "deadline": deadline_el.get_text(strip=True) if deadline_el else None,
-                "email": _extract_email(desc),
-                "source": "academicpositions",
-                "type": _detect_type(title_el.get_text(strip=True), desc),
-            })
-        return listings
-    except Exception:
-        return []
-
-
 # ---------------------------------------------------------------------------
 # JobSearcher class
 # ---------------------------------------------------------------------------
 
 class JobSearcher:
-    """Searches for research/PhD positions across all available free sources."""
+    """Searches for research/PhD positions across purely academic sources.
+
+    Sources: Euraxess, jobs.ac.uk, FindAPhD.
+    """
 
     def search(
         self,
@@ -269,20 +274,19 @@ class JobSearcher:
 
         Args:
             field:         Research field (e.g. "machine learning").
-            location:      Preferred location (e.g. "Europe", "UK").
-            position_type: Filter: "phd", "postdoc", "fellowship", "research_staff", or "any".
+            location:      Preferred location (e.g. "Europe", "UK", "Germany").
+            position_type: Filter: "phd", "postdoc", "fellowship", "research_staff", "any".
 
         Returns:
             Deduplicated list of JobListing dicts, sorted with richer entries first.
         """
+        pt = position_type.lower() if position_type else "any"
         all_listings: list[dict] = []
 
         for scraper in [
-            _search_duckduckgo,
-            _search_euraxess,
-            _search_jobs_ac_uk,
-            _search_findaphd,
-            _search_academic_positions,
+            lambda f, l: _search_euraxess(f, l, pt),
+            lambda f, l: _search_jobs_ac_uk(f, l, pt),
+            lambda f, l: _search_findaphd(f, l, pt),
         ]:
             try:
                 results = scraper(field, location)
@@ -293,8 +297,12 @@ class JobSearcher:
 
         all_listings = _deduplicate(all_listings)
 
-        if position_type and position_type.lower() != "any":
-            all_listings = [j for j in all_listings if j.get("type") == position_type.lower()]
+        # Post-filter by position_type if site didn't apply it natively
+        if pt != "any":
+            all_listings = [
+                j for j in all_listings
+                if j.get("type") == pt or j.get("type") == "other"
+            ]
 
         all_listings.sort(key=lambda j: len(j.get("description") or ""), reverse=True)
         return all_listings
