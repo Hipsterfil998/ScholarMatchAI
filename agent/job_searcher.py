@@ -232,14 +232,69 @@ def _search_findaphd(field: str, location: str, position_type: str) -> list[dict
         return []
 
 
+def _search_web(field: str, location: str, position_type: str) -> list[dict]:
+    """DuckDuckGo web search — targeted queries for open academic positions by field and country."""
+    try:
+        from duckduckgo_search import DDGS  # type: ignore
+    except ImportError:
+        return []
+
+    loc = location.strip() if location.lower() not in ("worldwide", "anywhere", "") else ""
+
+    # Build position-type label for the query
+    type_labels: dict[str, str] = {
+        "phd":            "PhD position",
+        "postdoc":        "postdoc position",
+        "fellowship":     "research fellowship",
+        "research_staff": "research scientist position",
+        "any":            "PhD OR postdoc OR research position",
+    }
+    type_label = type_labels.get(position_type, "PhD OR postdoc OR research position")
+
+    # Highly targeted queries: field + location + type + "open" / "call" / "apply"
+    queries = [
+        f'open {type_label} "{field}" {loc} university 2025 apply'.strip(),
+        f'"{field}" {type_label} {loc} call for applications 2025'.strip(),
+        f'"{field}" {type_label} {loc} funded vacancy'.strip(),
+    ]
+
+    raw: list[dict] = []
+    ddgs = DDGS()
+    for query in queries:
+        try:
+            results = ddgs.text(query, max_results=6)
+            if results:
+                raw.extend(results)
+            time.sleep(_DELAY)
+        except Exception:
+            continue
+
+    listings = []
+    for r in raw:
+        title = r.get("title", "")
+        body = r.get("body", "")
+        listings.append({
+            "title": title,
+            "institution": "",
+            "location": location,
+            "url": r.get("href", ""),
+            "description": body,
+            "deadline": None,
+            "email": _extract_email(body),
+            "source": "web",
+            "type": _detect_type(title, body),
+        })
+    return listings
+
+
 # ---------------------------------------------------------------------------
 # JobSearcher class
 # ---------------------------------------------------------------------------
 
 class JobSearcher:
-    """Searches for research/PhD positions across purely academic sources.
+    """Searches for research/PhD positions across academic sources and web.
 
-    Sources: Euraxess, jobs.ac.uk, FindAPhD.
+    Sources: jobs.ac.uk (UK only), FindAPhD (worldwide), DuckDuckGo (targeted web search).
     """
 
     def search(
@@ -262,7 +317,10 @@ class JobSearcher:
         all_listings: list[dict] = []
 
         # jobs.ac.uk is UK-only: only query it when location is UK or worldwide
-        scrapers = [lambda f, l: _search_findaphd(f, l, pt)]
+        scrapers = [
+            lambda f, l: _search_findaphd(f, l, pt),
+            lambda f, l: _search_web(f, l, pt),
+        ]
         if _is_uk_location(location) or _is_worldwide(location):
             scrapers.insert(0, lambda f, l: _search_jobs_ac_uk(f, l, pt))
 
