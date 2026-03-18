@@ -1,9 +1,8 @@
 """Job searcher: finds PhD / postdoc / research positions from free public sources.
 
 Sources:
-- Euraxess (European Commission research portal) — RSS feed
-- jobs.ac.uk (UK academic jobs) — HTML scraping with facet filters
-- FindAPhD (PhD-specific) — HTML scraping
+- jobs.ac.uk (UK academic jobs) — HTML scraping with facet filters; only queried for UK/worldwide
+- FindAPhD (worldwide PhD board) — HTML scraping; handles location filtering globally
 
 All scrapers are wrapped in try/except — if one source is down the rest continue.
 """
@@ -15,7 +14,6 @@ import time
 from typing import TypedDict
 from urllib.parse import quote_plus
 
-import feedparser
 import requests
 from bs4 import BeautifulSoup
 
@@ -101,43 +99,16 @@ def _deduplicate(listings: list[dict]) -> list[dict]:
 # Source scrapers
 # ---------------------------------------------------------------------------
 
-def _search_euraxess(field: str, location: str, position_type: str) -> list[dict]:
-    """Euraxess RSS feed — European research portal (EC)."""
-    query = field
-    if position_type != "any" and position_type in _TYPE_QUERY:
-        query = f"{field} {_TYPE_QUERY[position_type]}"
+_UK_LOCATIONS = {"uk", "united kingdom", "great britain", "england", "scotland", "wales"}
+_WORLDWIDE_LOCATIONS = {"worldwide", "anywhere", "any", "global", ""}
 
-    rss_url = f"https://euraxess.ec.europa.eu/jobs/search/rss?query={quote_plus(query)}"
 
-    # Some country codes Euraxess understands; pass through if specific country given
-    if location and location.lower() not in ("europe", "anywhere", "worldwide", ""):
-        rss_url += f"&country={quote_plus(location)}"
+def _is_uk_location(location: str) -> bool:
+    return location.lower() in _UK_LOCATIONS
 
-    try:
-        feed = feedparser.parse(rss_url)
-        listings = []
-        for entry in feed.entries[:25]:
-            title = entry.get("title", "")
-            link = entry.get("link", "")
-            summary = entry.get("summary", "") or entry.get("description", "")
-            # Institution often appears as "author" or in tags
-            institution = entry.get("author", "") or entry.get("dc_source", "")
-            published = entry.get("published", "") or entry.get("updated", "")
-            loc = entry.get("location", "") or location
-            listings.append({
-                "title": title,
-                "institution": institution,
-                "location": loc,
-                "url": link,
-                "description": summary,
-                "deadline": published or None,
-                "email": _extract_email(summary),
-                "source": "euraxess",
-                "type": _detect_type(title, summary),
-            })
-        return listings
-    except Exception:
-        return []
+
+def _is_worldwide(location: str) -> bool:
+    return location.lower() in _WORLDWIDE_LOCATIONS
 
 
 def _search_jobs_ac_uk(field: str, location: str, position_type: str) -> list[dict]:
@@ -283,11 +254,12 @@ class JobSearcher:
         pt = position_type.lower() if position_type else "any"
         all_listings: list[dict] = []
 
-        for scraper in [
-            lambda f, l: _search_euraxess(f, l, pt),
-            lambda f, l: _search_jobs_ac_uk(f, l, pt),
-            lambda f, l: _search_findaphd(f, l, pt),
-        ]:
+        # jobs.ac.uk is UK-only: only query it when location is UK or worldwide
+        scrapers = [lambda f, l: _search_findaphd(f, l, pt)]
+        if _is_uk_location(location) or _is_worldwide(location):
+            scrapers.insert(0, lambda f, l: _search_jobs_ac_uk(f, l, pt))
+
+        for scraper in scrapers:
             try:
                 results = scraper(field, location)
                 all_listings.extend(results)
