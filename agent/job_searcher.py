@@ -184,15 +184,22 @@ def _search_jobs_ac_uk(field: str, location: str, position_type: str) -> list[di
 
 
 def _search_findaphd(field: str, location: str, position_type: str) -> list[dict]:
-    """FindAPhD — PhD-focused academic job board."""
-    # FindAPhD is only relevant for PhD positions
-    if position_type not in ("any", "phd"):
-        return []
+    """FindAPhD — academic job board with separate PhD and non-PhD (postdoc/research) sections."""
+    # Choose the right endpoint based on position type
+    if position_type in ("postdoc", "fellowship", "research_staff"):
+        base_url = "https://www.findaphd.com/non-phd-research/"
+        forced_type = position_type
+    elif position_type == "phd":
+        base_url = "https://www.findaphd.com/phds/"
+        forced_type = "phd"
+    else:  # "any" — search both
+        results = (
+            _search_findaphd(field, location, "phd")
+            + _search_findaphd(field, location, "postdoc")
+        )
+        return results
 
-    url = (
-        f"https://www.findaphd.com/phds/"
-        f"?Keywords={quote_plus(field)}&Location={quote_plus(location)}"
-    )
+    url = f"{base_url}?Keywords={quote_plus(field)}&Location={quote_plus(location)}"
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=15)
         if resp.status_code != 200:
@@ -218,7 +225,7 @@ def _search_findaphd(field: str, location: str, position_type: str) -> list[dict
                 "deadline": deadline_el.get_text(strip=True) if deadline_el else None,
                 "email": _extract_email(desc),
                 "source": "findaphd",
-                "type": "phd",
+                "type": forced_type,
             })
         return listings
     except Exception:
