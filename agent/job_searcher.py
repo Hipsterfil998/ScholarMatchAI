@@ -507,6 +507,16 @@ class JobSearcher:
 
         all_listings = _deduplicate(all_listings)
 
+        # Post-filter: keep only listings that mention the field in title or description
+        field_keywords = [kw.strip().lower() for kw in re.split(r"[,/]", field) if kw.strip()]
+        all_listings = [
+            j for j in all_listings
+            if any(
+                kw in (j.get("title") or "").lower() or kw in (j.get("description") or "").lower()
+                for kw in field_keywords
+            )
+        ]
+
         # Post-filter by position_type if site didn't apply it natively
         if pt != "any":
             all_listings = [
