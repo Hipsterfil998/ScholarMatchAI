@@ -1,8 +1,13 @@
 """Gradio web interface for the Research Job Agent.
 
 Deployable on HuggingFace Spaces (free tier).
-LLM: HuggingFace Inference API (requires a free HF account).
-Job sources: Euraxess, FindAPhD, jobs.ac.uk, Academic Positions, DuckDuckGo.
+LLM: HuggingFace Inference API (free, no subscription required).
+
+Job sources:
+- Euraxess (euraxess.ec.europa.eu) — EU/worldwide research portal, country-filtered
+- mlscientist.com — ML/AI academic positions worldwide
+- jobs.ac.uk — UK academic jobs (only when UK location is selected)
+- DuckDuckGo — targeted web search for open calls by field, country, and position type
 """
 
 from __future__ import annotations
@@ -409,10 +414,11 @@ with gr.Blocks(
 
     gr.Markdown("""
     # Research Job Agent 🎓
-    *AI-powered search for PhD positions, postdocs, and research fellowships*
+    *AI-powered search for PhD positions, postdocs, fellowships, and research staff roles*
 
-    Searches **Euraxess**, **FindAPhD**, **jobs.ac.uk**, **Academic Positions** and the web.
-    Powered by free HuggingFace models — no paid subscription required.
+    Searches **Euraxess**, **mlscientist.com**, **jobs.ac.uk** (UK only), and the web via **DuckDuckGo**.
+    Scores each position against your CV, generates tailored cover letter drafts, and exports everything as a ZIP.
+    Powered by free HuggingFace Inference API models — no subscription required.
     """)
 
     with gr.Tabs() as tabs:
