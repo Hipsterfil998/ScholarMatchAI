@@ -232,6 +232,23 @@ def _search_findaphd(field: str, location: str, position_type: str) -> list[dict
         return []
 
 
+_CURRENT_YEAR = "2026"
+
+# Signals that a web result is actually an open job posting
+_JOB_SIGNALS = [
+    "open position", "open call", "call for applications", "we are recruiting",
+    "we are hiring", "vacancy", "apply now", "applications are invited",
+    "phd position", "phd studentship", "postdoc position", "postdoctoral position",
+    "research fellowship", "funded position", "fully funded", "stipend",
+    "deadline", "closing date", "how to apply",
+]
+
+
+def _looks_like_job_posting(title: str, body: str) -> bool:
+    combined = (title + " " + body).lower()
+    return any(sig in combined for sig in _JOB_SIGNALS)
+
+
 def _search_web(field: str, location: str, position_type: str) -> list[dict]:
     """DuckDuckGo web search — targeted queries for open academic positions by field and country."""
     try:
@@ -240,29 +257,32 @@ def _search_web(field: str, location: str, position_type: str) -> list[dict]:
         return []
 
     loc = location.strip() if location.lower() not in ("worldwide", "anywhere", "") else ""
+    yr = _CURRENT_YEAR
 
-    # Build position-type label for the query
+    # Build position-type labels for the query
     type_labels: dict[str, str] = {
-        "phd":            "PhD position",
-        "postdoc":        "postdoc position",
+        "phd":            "PhD studentship",
+        "postdoc":        "postdoctoral position",
         "fellowship":     "research fellowship",
-        "research_staff": "research scientist position",
-        "any":            "PhD OR postdoc OR research position",
+        "research_staff": "research scientist",
+        "any":            "PhD OR postdoc OR fellowship",
     }
-    type_label = type_labels.get(position_type, "PhD OR postdoc OR research position")
+    type_label = type_labels.get(position_type, "PhD OR postdoc OR fellowship")
 
-    # Highly targeted queries: field + location + type + "open" / "call" / "apply"
+    loc_part = f'"{loc}"' if loc else ""
+
+    # Three complementary query strategies targeting active {yr} calls
     queries = [
-        f'open {type_label} "{field}" {loc} university 2025 apply'.strip(),
-        f'"{field}" {type_label} {loc} call for applications 2025'.strip(),
-        f'"{field}" {type_label} {loc} funded vacancy'.strip(),
+        f'"{field}" {type_label} {loc_part} "call for applications" {yr}'.strip(),
+        f'"{field}" {type_label} {loc_part} "open position" OR "vacancy" {yr} apply'.strip(),
+        f'"{field}" {type_label} {loc_part} university funded {yr} deadline'.strip(),
     ]
 
     raw: list[dict] = []
     ddgs = DDGS()
     for query in queries:
         try:
-            results = ddgs.text(query, max_results=6)
+            results = ddgs.text(query, max_results=8)
             if results:
                 raw.extend(results)
             time.sleep(_DELAY)
@@ -273,6 +293,14 @@ def _search_web(field: str, location: str, position_type: str) -> list[dict]:
     for r in raw:
         title = r.get("title", "")
         body = r.get("body", "")
+        combined = (title + " " + body).lower()
+
+        # Keep only results that mention the current year and look like real job postings
+        if yr not in combined:
+            continue
+        if not _looks_like_job_posting(title, body):
+            continue
+
         listings.append({
             "title": title,
             "institution": "",
