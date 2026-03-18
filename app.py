@@ -364,10 +364,11 @@ def export_zip(approved: list) -> tuple:
 # ---------------------------------------------------------------------------
 
 MODELS = [
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    "HuggingFaceH4/zephyr-7b-beta",
     "Qwen/Qwen2.5-7B-Instruct",
-    "microsoft/Phi-3-mini-4k-instruct",
+    "meta-llama/Llama-3.2-3B-Instruct",
+    "microsoft/Phi-3.5-mini-instruct",
+    "mistralai/Mistral-Nemo-Instruct-2407",
+    "google/gemma-2-9b-it",
 ]
 
 # If a shared token is configured via Space Secrets, users don't need to provide one.
