@@ -31,6 +31,12 @@ class JobListing(TypedDict, total=False):
 
 
 _TYPE_KEYWORDS: dict[str, list[str]] = {
+    "predoctoral": [
+        "predoctoral", "pre-doctoral", "pre doctoral",
+        "master student", "master's student", "msc student",
+        "junior researcher", "research trainee", "research internship",
+        "early-stage researcher", "early stage researcher", "esr",
+    ],
     "phd": [
         "phd", "ph.d", "doctoral", "doctorate",
         "phd student", "phd candidate", "phd position",
@@ -53,6 +59,7 @@ _TYPE_KEYWORDS: dict[str, list[str]] = {
 
 # Position type → keywords appended to search query for sites without native facets
 _TYPE_QUERY: dict[str, str] = {
+    "predoctoral": "predoctoral OR \"early-stage researcher\" OR \"research trainee\"",
     "phd": "PhD",
     "postdoc": "postdoc OR \"research associate\" OR \"research fellow\"",
     "fellowship": "fellowship OR scholarship",
@@ -105,6 +112,7 @@ _WORLDWIDE_LOCATIONS = {"worldwide", "anywhere", "any", "global", ""}
 # mlscientist.com WordPress category slugs
 _MLSCI_TYPE_SLUG: dict[str, str] = {
     "phd":            "phd-positions",
+    "predoctoral":    "jobs",
     "postdoc":        "postdoc-positions",
     "fellowship":     "jobs",
     "research_staff": "jobs",
@@ -402,6 +410,7 @@ def _search_web(field: str, location: str, position_type: str) -> list[dict]:
 
     # Build position-type labels for the query
     type_labels: dict[str, str] = {
+        "predoctoral":    "predoctoral position OR \"early-stage researcher\"",
         "phd":            "PhD studentship",
         "postdoc":        "postdoctoral position",
         "fellowship":     "research fellowship",
