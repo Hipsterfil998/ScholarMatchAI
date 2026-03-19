@@ -31,7 +31,6 @@ Upload your CV, set a research field and country, and PhdScout will:
 | [Euraxess](https://euraxess.ec.europa.eu/jobs/search) | Europe and worldwide — official EU research portal |
 | [mlscientist.com](https://mlscientist.com) | ML / AI academic positions worldwide |
 | [jobs.ac.uk](https://www.jobs.ac.uk) | UK academic jobs (queried only when UK is selected) |
-| DuckDuckGo web search | Targeted queries for open calls by field, country, and position type |
 
 ---
 
@@ -100,7 +99,7 @@ PhDScout/
         ├── euraxess.py     # EuraxessScraper
         ├── mlscientist.py  # MLScientistScraper
         ├── jobs_ac_uk.py   # JobsAcUkScraper
-        └── web.py          # WebSearchScraper (DuckDuckGo)
+        └── web.py          # WebSearchScraper (available, not active by default)
 ```
 
 ---
@@ -113,8 +112,6 @@ Powered by [Groq](https://groq.com) free API — fast inference, no subscription
 |-------|-------|
 | `llama-3.3-70b-versatile` | Default, best quality |
 | `llama-3.1-8b-instant` | Fastest |
-| `gemma2-9b-it` | Good balance |
-| `mixtral-8x7b-32768` | Long context |
 
 For local use, the app also supports **Ollama** — set `LLM_BACKEND=ollama` in `.env`.
 
