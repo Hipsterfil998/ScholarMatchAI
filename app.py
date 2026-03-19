@@ -21,7 +21,7 @@ from typing import Any
 
 import gradio as gr
 
-from agent.pipeline import JobAgent
+from agent import JobAgent
 from agent.utils import job_institution
 
 

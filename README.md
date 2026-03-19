@@ -42,7 +42,7 @@ Upload your CV, set a research field and country, and PhdScout will:
 4. Choose the position type (`PhD`, `postdoc`, `fellowship`, `predoctoral`, `research staff`)
 5. Set a minimum match score (used as a recommendation threshold — all positions are reviewable)
 6. Click **Parse CV & Search Positions** and wait (~2–3 minutes)
-7. In the **Results** tab, browse all found positions and the recommended shortlist
+7. In the **Results** tab, browse all scored positions
 8. In the **Review & Edit** tab, load any position, read CV tailoring hints, and edit the cover letter
 9. Click **Approve & Save** for positions you want to apply to
 10. In the **Export** tab, download all approved applications as a ZIP
@@ -60,9 +60,11 @@ pip install -r requirements.txt
 Create a `.env` file:
 
 ```env
-LLM_BACKEND=huggingface
-HF_API_KEY=your_huggingface_token
+LLM_BACKEND=groq
+GROQ_API_KEY=your_groq_api_key
 ```
+
+Get a free Groq API key at [console.groq.com/keys](https://console.groq.com/keys).
 
 Then run:
 
@@ -81,30 +83,37 @@ PhDScout/
 ├── app.py                  # Gradio web interface
 ├── config.py               # Configuration (env vars, defaults)
 ├── requirements.txt
-├── agent/
-│   ├── pipeline.py         # JobAgent orchestrator
-│   ├── job_searcher.py     # Multi-source job scraper
-│   ├── cv_parser.py        # CV text extraction + LLM parsing
-│   ├── job_matcher.py      # LLM-based position scoring
-│   ├── cv_tailor.py        # CV tailoring hints generator
-│   ├── cover_letter.py     # Cover letter generator
-│   ├── llm_client.py       # Unified LLM client (Ollama / HuggingFace)
-│   └── utils.py            # Shared utilities
+└── agent/
+    ├── __init__.py         # Public API: JobAgent, LLMQuotaError
+    ├── pipeline.py         # JobAgent orchestrator
+    ├── base_service.py     # BaseLLMService base class
+    ├── cv_parser.py        # CV text extraction + LLM parsing
+    ├── job_matcher.py      # LLM-based position scoring
+    ├── cv_tailor.py        # CV tailoring hints generator
+    ├── cover_letter.py     # Cover letter generator
+    ├── searcher.py         # JobSearcher (orchestrates scrapers)
+    ├── llm_client.py       # Unified LLM client (Groq / HuggingFace / Ollama)
+    ├── utils.py            # Shared utilities
+    └── scrapers/
+        ├── base.py         # BaseScraper ABC + shared helpers
+        ├── euraxess.py     # EuraxessScraper
+        ├── mlscientist.py  # MLScientistScraper
+        ├── jobs_ac_uk.py   # JobsAcUkScraper
+        └── web.py          # WebSearchScraper (DuckDuckGo)
 ```
 
 ---
 
 ## Models
 
-Powered by free [HuggingFace Inference API](https://huggingface.co/inference-api) models — no paid subscription required.
+Powered by [Groq](https://groq.com) free API — fast inference, no subscription required.
 
 | Model | Notes |
 |-------|-------|
-| `Qwen/Qwen2.5-7B-Instruct` | Default, recommended |
-| `meta-llama/Llama-3.2-3B-Instruct` | Lightweight |
-| `microsoft/Phi-3.5-mini-instruct` | Fast |
-| `mistralai/Mistral-Nemo-Instruct-2407` | Good instruction following |
-| `google/gemma-2-9b-it` | Strong reasoning |
+| `llama-3.3-70b-versatile` | Default, best quality |
+| `llama-3.1-8b-instant` | Fastest |
+| `gemma2-9b-it` | Good balance |
+| `mixtral-8x7b-32768` | Long context |
 
 For local use, the app also supports **Ollama** — set `LLM_BACKEND=ollama` in `.env`.
 
