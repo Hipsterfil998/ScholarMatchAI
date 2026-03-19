@@ -888,67 +888,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#duckduckgo-web-search" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DuckDuckGo Web Search
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DuckDuckGo Web Search">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-it-is_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What it is
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#how-it-works_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supported-locations_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Supported locations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#limitations_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Limitations
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#source-activation-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1393,67 +1332,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#duckduckgo-web-search" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DuckDuckGo Web Search
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DuckDuckGo Web Search">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-it-is_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What it is
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#how-it-works_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supported-locations_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Supported locations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#limitations_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Limitations
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#source-activation-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1496,7 +1374,7 @@
 
 
 <h1 id="job-sources">Job Sources</h1>
-<p>PhdScout searches four independent job sources in every query. All sources are publicly accessible with no authentication required. The <code>JobSearcher</code> runs them sequentially (with a polite 1.5-second delay between requests) and deduplicates results by URL.</p>
+<p>PhdScout searches three independent job sources in every query. All sources are publicly accessible with no authentication required. The <code>JobSearcher</code> runs them sequentially (with a polite 1.5-second delay between requests) and deduplicates results by URL.</p>
 <hr />
 <h2 id="euraxess">Euraxess</h2>
 <p><strong>URL:</strong> <a href="https://euraxess.ec.europa.eu/jobs/search">euraxess.ec.europa.eu</a>
@@ -1608,8 +1486,8 @@
 <td>Appends <code>researcher</code> to the keyword query</td>
 </tr>
 <tr>
-<td><code>any</code></td>
-<td>No modification</td>
+<td><code>predoctoral</code></td>
+<td>No modification (no native facet)</td>
 </tr>
 </tbody>
 </table>
@@ -1622,38 +1500,6 @@
 <li>Descriptions are short metadata strings (department, salary) rather than full text.</li>
 <li>Email addresses are not included in search results.</li>
 </ul>
-<hr />
-<h2 id="duckduckgo-web-search">DuckDuckGo Web Search</h2>
-<p><strong>URL:</strong> Targets any academic website via DuckDuckGo
-<strong>Scraper:</strong> <code>agent/scrapers/web.py</code> — <code>WebSearchScraper</code>
-<strong>Source tag in results:</strong> <code>web</code>
-<strong>Dependency:</strong> <code>duckduckgo-search</code> package</p>
-<h3 id="what-it-is_3">What it is</h3>
-<p>The <code>WebSearchScraper</code> uses the <code>duckduckgo-search</code> library to run targeted queries and find job postings on institutional pages, research group websites, and smaller job boards not covered by the other scrapers. It is the most flexible source and can find positions anywhere in the world.</p>
-<h3 id="how-it-works_3">How it works</h3>
-<p>Three queries are built per search, combining the field, position type, location, and current year:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&quot;machine learning&quot; PhD studentship &quot;Germany&quot; &quot;call for applications&quot; 2025
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>&quot;machine learning&quot; PhD studentship &quot;Germany&quot; &quot;open position&quot; OR &quot;vacancy&quot; 2025 apply
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>&quot;machine learning&quot; PhD studentship &quot;Germany&quot; university funded 2025 deadline
-</code></pre></div>
-<p>Up to 8 results per query are fetched. Results are filtered to:</p>
-<ol>
-<li>Contain the current year (removes outdated postings).</li>
-<li>Contain at least one "job signal" keyword such as <code>call for applications</code>, <code>open position</code>, <code>vacancy</code>, <code>deadline</code>, <code>apply now</code>, etc.</li>
-</ol>
-<h3 id="supported-locations_2">Supported locations</h3>
-<p>Any location can be specified as a free-text string. The location is quoted and added directly to the search query. This makes <code>WebSearchScraper</code> the most flexible source for countries not covered by Euraxess or mlscientist (e.g. Singapore, South Korea, Brazil).</p>
-<h3 id="limitations_3">Limitations</h3>
-<ul>
-<li>Results may include false positives (conference calls, non-academic jobs) that pass the keyword filter.</li>
-<li>The <code>institution</code> field is always empty — it is inferred from the title text only.</li>
-<li>DuckDuckGo rate limits may occasionally return empty results; the scraper silently continues.</li>
-<li>Results depend on search engine indexing and may miss recently posted positions.</li>
-</ul>
-<div class="admonition note">
-<p class="admonition-title">duckduckgo-search package</p>
-<p>If <code>duckduckgo-search</code> is not installed, <code>WebSearchScraper.scrape()</code> returns an empty list silently. This is intentional — the other three sources continue to work.</p>
-</div>
 <hr />
 <h2 id="source-activation-summary">Source Activation Summary</h2>
 <table>
@@ -1676,11 +1522,6 @@
 <td>—</td>
 </tr>
 <tr>
-<td>DuckDuckGo</td>
-<td>Yes</td>
-<td>—</td>
-</tr>
-<tr>
 <td>jobs.ac.uk</td>
 <td>—</td>
 <td>Yes (UK, England, Scotland, Wales, Great Britain, Worldwide, blank)</td>
@@ -1691,7 +1532,7 @@
 <h2 id="deduplication">Deduplication</h2>
 <p>After all scrapers run, <code>JobSearcher._deduplicate()</code> removes listings with duplicate URLs. The first occurrence (from the highest-priority source) is kept. Listings without a URL are always retained.</p>
 <p>Results are then filtered by field relevance: the query field is split into phrases and each phrase must appear either in the job title, or have all significant words (4+ characters) present in either the title or description.</p>
-<p>Finally, if a <code>--type</code> filter other than <code>any</code> is specified, only positions whose detected type matches (or is <code>other</code>) are retained. Results are sorted by description length (longer descriptions first, as they tend to be more complete).</p>
+<p>Finally, if a position type filter is specified, only positions whose detected type matches (or is <code>other</code>) are retained. Results are sorted by description length (longer descriptions first, as they tend to be more complete).</p>
 
 
 
