@@ -3,11 +3,9 @@
 from agent.scrapers.euraxess import EuraxessScraper
 from agent.scrapers.jobs_ac_uk import JobsAcUkScraper
 from agent.scrapers.mlscientist import MLScientistScraper
-from agent.scrapers.web import WebSearchScraper
 
 __all__ = [
     "EuraxessScraper",
     "JobsAcUkScraper",
     "MLScientistScraper",
-    "WebSearchScraper",
 ]

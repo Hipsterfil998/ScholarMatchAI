@@ -93,6 +93,7 @@ class EuraxessScraper(BaseScraper):
                 "url": full_url,
                 "description": desc,
                 "deadline": deadline,
+                "posted": posted,
                 "email": self._extract_email(desc),
                 "source": self.name,
                 "type": self._detect_type(title_text, desc),

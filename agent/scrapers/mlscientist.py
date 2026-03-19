@@ -102,6 +102,11 @@ class MLScientistScraper(BaseScraper):
                 )
                 deadline = deadline_match.group(1).strip() if deadline_match else None
 
+                time_el = card.select_one("time.entry-date, time[datetime]")
+                posted = (
+                    time_el.get("datetime") or time_el.get_text(strip=True)
+                ) if time_el else None
+
                 title_text = title_el.get_text(strip=True)
                 listings.append({
                     "title": title_text,
@@ -110,6 +115,7 @@ class MLScientistScraper(BaseScraper):
                     "url": href,
                     "description": excerpt,
                     "deadline": deadline,
+                    "posted": posted,
                     "email": self._extract_email(excerpt),
                     "source": self.name,
                     "type": self._detect_type(title_text, excerpt),

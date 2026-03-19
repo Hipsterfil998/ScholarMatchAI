@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from datetime import datetime
 from typing import TypedDict
 
 from agent.scrapers import (
@@ -21,6 +22,7 @@ class JobListing(TypedDict, total=False):
     url: str
     description: str
     deadline: str | None
+    posted: str | None
     email: str | None
     source: str
     type: str
@@ -38,7 +40,6 @@ class JobSearcher:
     - Euraxess — EU/worldwide research portal
     - mlscientist.com — ML/AI academic positions
     - jobs.ac.uk — UK academic jobs (only when UK/worldwide location is selected)
-    - DuckDuckGo — targeted web search for open calls
 
     All scrapers are fault-tolerant: if one source is down the rest continue.
     """
@@ -83,7 +84,7 @@ class JobSearcher:
                 if j.get("type") == pt or j.get("type") == "other"
             ]
 
-        all_listings.sort(key=lambda j: len(j.get("description") or ""), reverse=True)
+        all_listings.sort(key=self._sort_key, reverse=True)
         return all_listings
 
     # ------------------------------------------------------------------
@@ -103,6 +104,19 @@ class JobSearcher:
         if location.lower() in _UK_LOCATIONS or location.lower() in _WORLDWIDE_LOCATIONS:
             scrapers.insert(0, JobsAcUkScraper())
         return scrapers
+
+    @staticmethod
+    def _sort_key(job: dict) -> tuple:
+        """Sort key: (has_date, posted_datetime, description_length).
+
+        Jobs with a known posting date are ranked first, most recent first.
+        Within the same date (or when no date is available), longer descriptions rank higher.
+        """
+        from agent.scrapers.base import BaseScraper
+        posted = BaseScraper._parse_date(job.get("posted"))
+        has_date = posted is not None
+        dt = posted or datetime.min
+        return (has_date, dt, len(job.get("description") or ""))
 
     @staticmethod
     def _deduplicate(listings: list[dict]) -> list[dict]:
