@@ -7,7 +7,6 @@ Job sources:
 - Euraxess (euraxess.ec.europa.eu) — EU/worldwide research portal, country-filtered
 - mlscientist.com — ML/AI academic positions worldwide
 - jobs.ac.uk — UK academic jobs (only when UK location is selected)
-- DuckDuckGo — targeted web search for open calls by field, country, and position type
 """
 
 from __future__ import annotations
@@ -413,7 +412,7 @@ with gr.Blocks(
     # PhdScout 🎓
     *AI-powered search for PhD positions, postdocs, fellowships, and research staff roles*
 
-    Searches **Euraxess**, **mlscientist.com**, **jobs.ac.uk** (UK only), and the web via **DuckDuckGo**.
+    Searches **Euraxess**, **mlscientist.com**, and **jobs.ac.uk** (UK only).
     Scores each position against your CV, generates tailored cover letter drafts, and exports everything as a ZIP.
     Powered by **Groq** free API — no subscription required.
     """)
