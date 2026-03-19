@@ -76,8 +76,6 @@ PhdScout supports three LLM backends. Create a `.env` file in the project root w
     |---|---|---|
     | `llama-3.3-70b-versatile` | Medium | Highest (default) |
     | `llama-3.1-8b-instant` | Very fast | Good |
-    | `gemma2-9b-it` | Fast | Good |
-    | `mixtral-8x7b-32768` | Medium | High, long context |
 
 === "HuggingFace Serverless"
 

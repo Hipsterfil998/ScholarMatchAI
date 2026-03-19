@@ -66,10 +66,8 @@ Select the Groq model to use for this session. The model affects CV parsing, sco
 
 | Model | Best for |
 |---|---|
-| `llama-3.3-70b-versatile` | Best cover letter quality (default) |
+| `llama-3.3-70b-versatile` | Best quality — cover letters and scoring (default) |
 | `llama-3.1-8b-instant` | Fast iteration, lower latency |
-| `gemma2-9b-it` | Alternative if llama is slow |
-| `mixtral-8x7b-32768` | Long CVs or very detailed positions |
 
 ### Starting the Search
 
