@@ -719,8 +719,8 @@ scored = agent.score_jobs(jobs, profile_text)
     </ul>
 
     <h2>Adding a source</h2>
-    <p>Create a new file in <code>agent/scrapers/</code> that subclasses <code>BaseScraper</code>:</p>
-    <pre><code><span class="kw">from</span> agent.scrapers.base <span class="kw">import</span> BaseScraper
+    <p>Create a new file in <code>agent/search/scrapers/</code> that subclasses <code>BaseScraper</code>:</p>
+    <pre><code><span class="kw">from</span> agent.search.scrapers.base <span class="kw">import</span> BaseScraper
 
 <span class="kw">class</span> MyScraper(BaseScraper):
     name = <span class="st">"mysource"</span>
@@ -738,7 +738,7 @@ scored = agent.score_jobs(jobs, profile_text)
                 <span class="st">"type"</span>: self._detect_type(card.text, <span class="st">""</span>),
             })
         <span class="kw">return</span> results</code></pre>
-    <p>Then register it in <code>agent/searcher.py → _build_scrapers()</code>.</p>
+    <p>Then register it in <code>agent/search/searcher.py → _build_scrapers()</code>.</p>
   </section>
 
   <!-- ── Configuration ──────────────────────────────────────────────── -->
@@ -787,7 +787,7 @@ scored = agent.score_jobs(jobs, profile_text)
   <!-- ── Prompts ────────────────────────────────────────────────────── -->
   <section class="section" id="prompts">
     <h1>Prompts</h1>
-    <p>All LLM prompts are centralised in <code>agent/prompts.py</code>. Edit that file to tune the agent's behaviour — no code changes elsewhere required.</p>
+    <p>All LLM prompts live in <code>agent/prompts/</code>. Each service has its own file — edit the relevant file to tune that part of the agent's behaviour.</p>
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
@@ -797,14 +797,18 @@ scored = agent.score_jobs(jobs, profile_text)
     <h2>Available prompts</h2>
     <table>
       <tr><th>Constant</th><th>Used by</th><th>Controls</th></tr>
+      <tr><th colspan="3" style="background:var(--bg);font-size:12px;color:var(--text-secondary);font-weight:500;">File: <code>agent/prompts/cv_parser.py</code></th></tr>
       <tr><td><code>CV_PARSER_SYSTEM</code><br><code>CV_PARSER_PROMPT</code></td><td><code>CVParser</code></td><td>How the CV is structured into JSON. Tweak to extract custom fields.</td></tr>
-      <tr><td><code>JOB_MATCHER_SYSTEM</code><br><code>JOB_MATCHER_PROMPT</code></td><td><code>JobMatcher</code></td><td>Scoring criteria and guidelines. Edit the scoring guide to adjust thresholds.</td></tr>
+      <tr><th colspan="3" style="background:var(--bg);font-size:12px;color:var(--text-secondary);font-weight:500;">File: <code>agent/prompts/job_matcher.py</code></th></tr>
+      <tr><td><code>JOB_MATCHER_SYSTEM</code><br><code>JOB_MATCHER_PROMPT</code></td><td><code>JobMatcher</code></td><td>Scoring criteria, eligibility gate, and scoring guide. Edit thresholds here.</td></tr>
+      <tr><th colspan="3" style="background:var(--bg);font-size:12px;color:var(--text-secondary);font-weight:500;">File: <code>agent/prompts/cv_tailor.py</code></th></tr>
       <tr><td><code>CV_TAILOR_SYSTEM</code><br><code>CV_TAILOR_PROMPT</code></td><td><code>CVTailor</code></td><td>What tailoring hints to produce and how specific to be.</td></tr>
+      <tr><th colspan="3" style="background:var(--bg);font-size:12px;color:var(--text-secondary);font-weight:500;">File: <code>agent/prompts/cover_letter.py</code></th></tr>
       <tr><td><code>COVER_LETTER_SYSTEM</code><br><code>COVER_LETTER_PROMPT</code></td><td><code>CoverLetterWriter</code></td><td>Letter style, length, structure, and language detection.</td></tr>
     </table>
 
     <h2>Example: changing the letter length</h2>
-    <p>In <code>agent/prompts.py</code>, find <code>COVER_LETTER_SYSTEM</code> and change:</p>
+    <p>In <code>agent/prompts/cover_letter.py</code>, find <code>COVER_LETTER_SYSTEM</code> and change:</p>
     <pre><code><span class="cm"># Before</span>
 The letter should be <span class="st">400-600 words (3-4 paragraphs)</span>.
 
@@ -834,21 +838,28 @@ The letter should be <span class="st">250-350 words (2-3 paragraphs)</span>.</co
 ├── <span class="dir">agent/</span>
 │   ├── <span class="file">__init__.py</span>         <span class="note"># Public API: JobAgent, LLMQuotaError</span>
 │   ├── <span class="file">pipeline.py</span>         <span class="note"># JobAgent orchestrator</span>
-│   ├── <span class="file">prompts.py</span>          <span class="note"># All LLM prompts ← edit here</span>
 │   ├── <span class="file">base_service.py</span>     <span class="note"># BaseLLMService base class</span>
-│   ├── <span class="file">cv_parser.py</span>        <span class="note"># CV extraction + LLM parsing</span>
-│   ├── <span class="file">job_matcher.py</span>      <span class="note"># Scoring engine</span>
-│   ├── <span class="file">cv_tailor.py</span>        <span class="note"># Tailoring hints generator</span>
-│   ├── <span class="file">cover_letter.py</span>     <span class="note"># Cover letter writer</span>
-│   ├── <span class="file">searcher.py</span>         <span class="note"># JobSearcher (orchestrates scrapers)</span>
 │   ├── <span class="file">llm_client.py</span>       <span class="note"># Groq / HuggingFace / Ollama client</span>
 │   ├── <span class="file">utils.py</span>            <span class="note"># JSON parsing, shared helpers</span>
-│   └── <span class="dir">scrapers/</span>
-│       ├── <span class="file">base.py</span>         <span class="note"># BaseScraper ABC</span>
-│       ├── <span class="file">euraxess.py</span>     <span class="note"># EuraxessScraper</span>
-│       ├── <span class="file">mlscientist.py</span>  <span class="note"># MLScientistScraper</span>
-│       └── <span class="file">jobs_ac_uk.py</span>   <span class="note"># JobsAcUkScraper</span>
-└── <span class="dir">tests/</span>              <span class="note"># 109 unit tests (pytest)</span>
+│   ├── <span class="dir">prompts/</span>            <span class="note"># LLM prompts — one file per service</span>
+│   │   ├── <span class="file">cv_parser.py</span>    <span class="note"># CV extraction prompts</span>
+│   │   ├── <span class="file">job_matcher.py</span>  <span class="note"># Scoring + eligibility gate prompts</span>
+│   │   ├── <span class="file">cv_tailor.py</span>    <span class="note"># Tailoring hints prompts</span>
+│   │   └── <span class="file">cover_letter.py</span> <span class="note"># Cover letter prompts</span>
+│   ├── <span class="dir">cv/</span>                 <span class="note"># CV-related services</span>
+│   │   ├── <span class="file">parser.py</span>       <span class="note"># CV extraction + LLM parsing</span>
+│   │   ├── <span class="file">tailor.py</span>       <span class="note"># Tailoring hints generator</span>
+│   │   └── <span class="file">cover_letter.py</span> <span class="note"># Cover letter writer</span>
+│   ├── <span class="dir">matching/</span>           <span class="note"># Scoring engine</span>
+│   │   └── <span class="file">matcher.py</span>      <span class="note"># JobMatcher + PhD eligibility cap</span>
+│   └── <span class="dir">search/</span>             <span class="note"># Job search infrastructure</span>
+│       ├── <span class="file">searcher.py</span>     <span class="note"># JobSearcher (orchestrates scrapers)</span>
+│       └── <span class="dir">scrapers/</span>
+│           ├── <span class="file">base.py</span>     <span class="note"># BaseScraper ABC + shared helpers</span>
+│           ├── <span class="file">euraxess.py</span> <span class="note"># EuraxessScraper</span>
+│           ├── <span class="file">mlscientist.py</span> <span class="note"># MLScientistScraper</span>
+│           └── <span class="file">jobs_ac_uk.py</span> <span class="note"># JobsAcUkScraper</span>
+└── <span class="dir">tests/</span>              <span class="note"># 125 unit tests (pytest)</span>
     </div>
 
     <h2>Pipeline flow</h2>

@@ -92,26 +92,33 @@ The app will be available at `http://localhost:7860`.
 
 ```
 PhDScout/
-├── app.py                  # Gradio web interface
-├── config.py               # Runtime settings (model, thresholds, delays)
+├── app.py                      # Gradio web interface
+├── config.py                   # Runtime settings (model, thresholds, delays)
 ├── requirements.txt
 └── agent/
-    ├── __init__.py         # Public API: JobAgent, LLMQuotaError
-    ├── pipeline.py         # JobAgent orchestrator
-    ├── prompts.py          # All LLM prompts (edit here to tune behaviour)
-    ├── base_service.py     # BaseLLMService base class
-    ├── cv_parser.py        # CV text extraction + LLM parsing
-    ├── job_matcher.py      # LLM-based position scoring
-    ├── cv_tailor.py        # CV tailoring hints generator
-    ├── cover_letter.py     # Cover letter generator
-    ├── searcher.py         # JobSearcher (orchestrates scrapers)
-    ├── llm_client.py       # Unified LLM client (Groq / HuggingFace / Ollama)
-    ├── utils.py            # Shared utilities
-    └── scrapers/
-        ├── base.py         # BaseScraper ABC + shared helpers
-        ├── euraxess.py     # EuraxessScraper
-        ├── mlscientist.py  # MLScientistScraper
-        └── jobs_ac_uk.py   # JobsAcUkScraper
+    ├── __init__.py             # Public API: JobAgent, LLMQuotaError
+    ├── pipeline.py             # JobAgent orchestrator
+    ├── base_service.py         # BaseLLMService base class
+    ├── llm_client.py           # Groq / HuggingFace / Ollama client
+    ├── utils.py                # Shared utilities
+    ├── prompts/                # LLM prompts — one file per service
+    │   ├── cv_parser.py
+    │   ├── job_matcher.py
+    │   ├── cv_tailor.py
+    │   └── cover_letter.py
+    ├── cv/                     # CV-related services
+    │   ├── parser.py           # CV extraction + LLM parsing
+    │   ├── tailor.py           # Tailoring hints generator
+    │   └── cover_letter.py     # Cover letter writer
+    ├── matching/
+    │   └── matcher.py          # LLM-based scoring + PhD eligibility cap
+    └── search/
+        ├── searcher.py         # JobSearcher (orchestrates scrapers)
+        └── scrapers/
+            ├── base.py         # BaseScraper ABC + shared helpers
+            ├── euraxess.py
+            ├── mlscientist.py
+            └── jobs_ac_uk.py
 ```
 
 ---
