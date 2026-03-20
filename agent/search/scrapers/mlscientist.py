@@ -95,7 +95,7 @@ class MLScientistScraper(BaseScraper):
                 if (
                     location.lower() not in ("worldwide", "europe", "europe (all)", "")
                     and country_slug
-                    and country_slug not in card_classes
+                    and f"category-{country_slug}" not in card_classes
                 ):
                     continue
 
