@@ -25,8 +25,8 @@ mv README.hf.tmp README.md
 git add README.md
 git commit -q -m "chore: add HF frontmatter [skip ci]"
 
-# 3. Push to HuggingFace Space
-git push space main
+# 3. Force-push to HuggingFace Space (safe: remote only has our injected frontmatter commit)
+git push --force space main
 
 # 4. Undo the temporary commit, restore README
 git reset --soft HEAD~1
