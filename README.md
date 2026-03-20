@@ -94,9 +94,11 @@ PhDScout/
         ├── searcher.py         # JobSearcher (orchestrates scrapers)
         └── scrapers/
             ├── base.py         # BaseScraper ABC + shared helpers
-            ├── euraxess.py
-            ├── mlscientist.py
-            └── jobs_ac_uk.py
+            ├── euraxess.py     # EU/worldwide research portal
+            ├── mlscientist.py  # ML & AI academic positions
+            ├── jobs_ac_uk.py   # UK academic jobs (UK/worldwide only)
+            ├── scholarshipdb.py # Worldwide aggregator (28k+ positions)
+            └── nature_careers.py # Nature.com/careers — multidisciplinary
 ```
 
 ---
@@ -116,6 +118,8 @@ Job data sourced from:
 - [Euraxess](https://euraxess.ec.europa.eu) — European Commission portal for research careers
 - [mlscientist.com](https://mlscientist.com) — ML & AI academic job board
 - [jobs.ac.uk](https://www.jobs.ac.uk) — UK academic jobs portal
+- [scholarshipdb.net](https://scholarshipdb.net) — Worldwide academic jobs and scholarships aggregator
+- [nature.com/careers](https://www.nature.com/naturecareers) — Multidisciplinary global research job board
 
 LLM inference powered by [Groq](https://groq.com) free API.
 

@@ -441,7 +441,7 @@
       <div class="card-sm">
         <span class="icon-big">🔍</span>
         <h4>Multi-source Search</h4>
-        <p>Euraxess, mlscientist.com, jobs.ac.uk searched simultaneously</p>
+        <p>5 job boards searched simultaneously — Europe, worldwide, and country-specific</p>
       </div>
       <div class="card-sm">
         <span class="icon-big">🤖</span>
@@ -474,7 +474,7 @@
           <div class="step-num"></div>
           <div class="step-body">
             <strong>Search job boards</strong>
-            <p>PhdScout queries Euraxess, mlscientist.com, and jobs.ac.uk in parallel, then deduplicates and filters by recency (expired listings discarded).</p>
+            <p>PhdScout queries Euraxess, mlscientist.com, jobs.ac.uk, scholarshipdb.net, and nature.com/careers in parallel, then deduplicates and filters by recency (expired listings discarded).</p>
           </div>
         </div>
         <div class="step">
@@ -696,17 +696,27 @@ scored = agent.score_jobs(jobs, profile_text)
       <div class="card-sm">
         <span class="icon-big">🇪🇺</span>
         <h4>Euraxess</h4>
-        <p>EU/worldwide research portal. Country-filtered.</p>
+        <p>EU/worldwide research portal. Country-filtered via API parameters.</p>
       </div>
       <div class="card-sm">
         <span class="icon-big">🤖</span>
         <h4>mlscientist.com</h4>
-        <p>ML &amp; AI academic positions worldwide.</p>
+        <p>ML &amp; AI academic positions. 14 country categories supported.</p>
       </div>
       <div class="card-sm">
         <span class="icon-big">🇬🇧</span>
         <h4>jobs.ac.uk</h4>
-        <p>UK academic jobs. Queried only when UK location is selected.</p>
+        <p>UK academic jobs. Queried only when UK or Worldwide is selected.</p>
+      </div>
+      <div class="card-sm">
+        <span class="icon-big">🌍</span>
+        <h4>scholarshipdb.net</h4>
+        <p>Worldwide aggregator with 28k+ positions across all disciplines. Country-filtered via URL path.</p>
+      </div>
+      <div class="card-sm">
+        <span class="icon-big">🔬</span>
+        <h4>nature.com/careers</h4>
+        <p>Multidisciplinary global board. Keyword search + ISO country code filtering.</p>
       </div>
     </div>
 
@@ -868,11 +878,13 @@ The letter should be <span class="st">250-350 words (2-3 paragraphs)</span>.</co
 │   └── <span class="dir">search/</span>             <span class="note"># Job search infrastructure</span>
 │       ├── <span class="file">searcher.py</span>     <span class="note"># JobSearcher (orchestrates scrapers)</span>
 │       └── <span class="dir">scrapers/</span>
-│           ├── <span class="file">base.py</span>     <span class="note"># BaseScraper ABC + shared helpers</span>
-│           ├── <span class="file">euraxess.py</span> <span class="note"># EuraxessScraper</span>
-│           ├── <span class="file">mlscientist.py</span> <span class="note"># MLScientistScraper</span>
-│           └── <span class="file">jobs_ac_uk.py</span> <span class="note"># JobsAcUkScraper</span>
-└── <span class="dir">tests/</span>              <span class="note"># 125 unit tests (pytest)</span>
+│           ├── <span class="file">base.py</span>           <span class="note"># BaseScraper ABC + shared helpers</span>
+│           ├── <span class="file">euraxess.py</span>       <span class="note"># EU/worldwide research portal</span>
+│           ├── <span class="file">mlscientist.py</span>    <span class="note"># ML &amp; AI academic positions</span>
+│           ├── <span class="file">jobs_ac_uk.py</span>     <span class="note"># UK academic jobs (UK/worldwide only)</span>
+│           ├── <span class="file">scholarshipdb.py</span>  <span class="note"># Worldwide aggregator (28k+ positions)</span>
+│           └── <span class="file">nature_careers.py</span> <span class="note"># nature.com/careers — multidisciplinary</span>
+└── <span class="dir">tests/</span>              <span class="note"># 156 unit tests (pytest)</span>
     </div>
 
     <h2>Pipeline flow</h2>
