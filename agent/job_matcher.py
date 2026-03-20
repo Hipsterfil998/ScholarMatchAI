@@ -96,7 +96,9 @@ class JobMatcher(BaseLLMService):
 
         result = self._generate_json(prompt)
         if result is None:
-            return _fallback("LLM call or JSON parse failed")
+            return _fallback("Response was not valid JSON")
+        if "_llm_error" in result:
+            return _fallback(result["_llm_error"])
 
         try:
             result["match_score"] = max(0, min(100, int(result.get("match_score", 0))))

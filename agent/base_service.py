@@ -49,6 +49,8 @@ class BaseLLMService:
             raw = self.llm.generate(system=self._SYSTEM, user=prompt, json_mode=True)
         except LLMQuotaError:
             raise
-        except RuntimeError:
-            return None
+        except RuntimeError as exc:
+            # Preserve the error message so callers can surface it to the user
+            # instead of silently returning score=0.
+            return {"_llm_error": str(exc)}
         return parse_json(raw)
