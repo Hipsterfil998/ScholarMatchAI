@@ -48,13 +48,13 @@ export default function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0e0e0e] flex flex-col">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#272320] bg-[#0e0e0e]/90 backdrop-blur-sm">
+    <div className="min-h-screen bg-[#0f0f12] flex flex-col">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#2e2e38] bg-[#0f0f12]/90 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          <span className="font-mono font-semibold text-sm tracking-wider text-[#e8e2d9] link-underline">
+          <span className="font-mono font-semibold text-sm tracking-wider text-[#e8e8f0] link-underline">
             PhdScout
           </span>
-          <div className="ml-auto text-[10px] font-mono tracking-widest uppercase text-[#6b6560] hidden sm:block">
+          <div className="ml-auto text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] hidden sm:block">
             Free · No sign-up · Powered by Groq
           </div>
         </div>
@@ -67,15 +67,15 @@ export default function App() {
                 className={[
                   'px-4 py-2.5 text-[10px] font-mono tracking-widest uppercase border-b-2 transition-colors',
                   tab === i
-                    ? 'border-[#d97706] text-[#d97706]'
+                    ? 'border-[#818cf8] text-[#818cf8]'
                     : disabled
-                      ? 'border-transparent text-[#272320] cursor-not-allowed'
-                      : 'border-transparent text-[#6b6560] hover:text-[#e8e2d9]',
+                      ? 'border-transparent text-[#2e2e38] cursor-not-allowed'
+                      : 'border-transparent text-[#7a7a8f] hover:text-[#e8e8f0]',
                 ].join(' ')}
               >
                 {name}
                 {badge !== null && (
-                  <span className="ml-1.5 text-[9px] text-[#d97706] border border-[#d97706]/40 px-1.5 py-0.5">
+                  <span className="ml-1.5 text-[9px] text-[#818cf8] border border-[#818cf8]/40 px-1.5 py-0.5">
                     {badge}
                   </span>
                 )}
@@ -111,8 +111,8 @@ export default function App() {
         {tab === 3 && <ExportTab approved={approved} />}
       </main>
 
-      <footer className="border-t border-[#272320]">
-        <div className="max-w-6xl mx-auto px-4 py-3 text-[10px] font-mono tracking-wide text-[#6b6560] flex flex-wrap gap-4">
+      <footer className="border-t border-[#2e2e38]">
+        <div className="max-w-6xl mx-auto px-4 py-3 text-[10px] font-mono tracking-wide text-[#7a7a8f] flex flex-wrap gap-4">
           <span>© 2025 PhdScout</span>
           <span>CVs are processed in memory and never stored</span>
           <span>Sources: Euraxess · ScholarshipDb · Nature Careers · mlscientist.com</span>

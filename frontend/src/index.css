@@ -4,31 +4,22 @@
 
 :root {
   color-scheme: dark;
-  --background: #0e0e0e;
-  --foreground: #e8e2d9;
-  --accent: #d97706;
-  --muted: #6b6560;
-  --border: #272320;
-  --card: #141210;
+  --bg:     #0f0f12;
+  --card:   #17171c;
+  --input:  #1e1e24;
+  --border: #2e2e38;
+  --fg:     #e8e8f0;
+  --muted:  #7a7a8f;
+  --accent: #818cf8;
 }
 
 @layer base {
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: 'Source Serif 4', Georgia, serif;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeInUp 0.4s ease forwards;
-  opacity: 0;
 }
 
 .link-underline {

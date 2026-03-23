@@ -10,24 +10,24 @@ function ProfileCard({ profile }) {
   const allSkills = [...(skills.programming || []), ...(skills.tools || [])].slice(0, 12)
 
   return (
-    <div className="bg-[#141210] border border-[#272320] rounded-sm p-5 space-y-3">
+    <div className="bg-[#17171c] border border-[#2e2e38] rounded p-5 space-y-3">
       <div>
-        <h3 className="font-mono font-semibold text-[#e8e2d9] text-base">{profile.name || 'Unknown'}</h3>
-        {contact.email && <p className="text-xs font-mono text-[#6b6560]">{contact.email}</p>}
+        <h3 className="font-mono font-semibold text-[#e8e8f0] text-base">{profile.name || 'Unknown'}</h3>
+        {contact.email && <p className="text-xs font-mono text-[#7a7a8f]">{contact.email}</p>}
         {contact.linkedin && (
           <a href={contact.linkedin} target="_blank" rel="noreferrer"
-            className="text-xs font-mono text-[#d97706] link-underline">LinkedIn</a>
+            className="text-xs font-mono text-[#818cf8] link-underline">LinkedIn</a>
         )}
       </div>
       {profile.summary && (
-        <p className="text-sm font-serif text-[#6b6560] leading-relaxed">{profile.summary}</p>
+        <p className="text-sm  text-[#7a7a8f] leading-relaxed">{profile.summary}</p>
       )}
       {interests.length > 0 && (
         <div>
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560] mb-1">Research interests</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1">Research interests</p>
           <div className="flex flex-wrap gap-1">
             {interests.map((item, idx) => (
-              <span key={idx} className="text-xs border border-[#272320] text-[#6b6560] px-2 py-0.5">
+              <span key={idx} className="text-xs border border-[#2e2e38] text-[#7a7a8f] px-2 py-0.5">
                 {item}
               </span>
             ))}
@@ -36,9 +36,9 @@ function ProfileCard({ profile }) {
       )}
       {education.length > 0 && (
         <div>
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560] mb-1">Education</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1">Education</p>
           {education.slice(0, 2).map((e, idx) => (
-            <p key={idx} className="text-xs font-serif text-[#6b6560]">
+            <p key={idx} className="text-xs  text-[#7a7a8f]">
               {e.degree} in {e.field} — {e.institution} ({e.year})
             </p>
           ))}
@@ -46,8 +46,8 @@ function ProfileCard({ profile }) {
       )}
       {allSkills.length > 0 && (
         <div>
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560] mb-1">Skills</p>
-          <p className="text-xs font-serif text-[#6b6560]">{allSkills.join(', ')}</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1">Skills</p>
+          <p className="text-xs  text-[#7a7a8f]">{allSkills.join(', ')}</p>
         </div>
       )}
     </div>
@@ -75,7 +75,7 @@ function JobCard({ job, idx, onSelect }) {
   const institution = job.institution || job.company || ''
 
   return (
-    <div className="bg-[#141210] border border-[#272320] rounded-sm p-4 hover:border-[#d97706]/40 transition-colors">
+    <div className="bg-[#17171c] border border-[#2e2e38] rounded p-4 hover:border-[#818cf8]/40 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -85,30 +85,30 @@ function JobCard({ job, idx, onSelect }) {
                 {recCfg.icon} {recCfg.label}
               </span>
             )}
-            {job.freshness && <span className="text-[10px] font-mono text-[#6b6560]">{job.freshness}</span>}
+            {job.freshness && <span className="text-[10px] font-mono text-[#7a7a8f]">{job.freshness}</span>}
           </div>
-          <h4 className="mt-1.5 font-mono font-semibold text-[#e8e2d9] text-sm leading-snug">
-            <a href={job.url} target="_blank" rel="noreferrer" className="hover:text-[#d97706] link-underline">
+          <h4 className="mt-1.5 font-mono font-semibold text-[#e8e8f0] text-sm leading-snug">
+            <a href={job.url} target="_blank" rel="noreferrer" className="hover:text-[#818cf8] link-underline">
               {job.title}
             </a>
           </h4>
-          <p className="text-xs font-mono text-[#6b6560] mt-0.5">
+          <p className="text-xs font-mono text-[#7a7a8f] mt-0.5">
             {institution}
             {institution && job.location ? ' · ' : ''}
             {job.location}
             {job.type ? ` · ${job.type}` : ''}
           </p>
           {match.why_good_fit && (
-            <p className="mt-1.5 text-xs font-serif text-[#6b6560] line-clamp-2">
-              <span className="font-semibold text-[#e8e2d9]/60">Why: </span>
+            <p className="mt-1.5 text-xs  text-[#7a7a8f] line-clamp-2">
+              <span className="font-semibold text-[#e8e8f0]/60">Why: </span>
               {match.why_good_fit}
             </p>
           )}
-          {job.deadline && <p className="mt-1 text-[10px] font-mono text-[#6b6560]">Deadline: {job.deadline}</p>}
+          {job.deadline && <p className="mt-1 text-[10px] font-mono text-[#7a7a8f]">Deadline: {job.deadline}</p>}
         </div>
         <button
           onClick={() => onSelect(idx)}
-          className="shrink-0 border border-[#d97706] text-[#d97706] text-[10px] font-mono tracking-widest uppercase px-3 py-1.5 hover:bg-[#d97706] hover:text-black transition-colors"
+          className="shrink-0 border border-[#818cf8] text-[#818cf8] text-[10px] font-mono tracking-widest uppercase px-3 py-1.5 hover:bg-[#818cf8] hover:text-[#0f0f12] transition-colors"
         >
           Review →
         </button>
@@ -128,33 +128,33 @@ export default function ResultsTab({ profile, scoredJobs, onSelectJob }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex-1">
-          <h2 className="font-mono text-xl font-semibold text-[#e8e2d9]">{scoredJobs.length} positions found</h2>
-          <p className="text-sm font-serif text-[#6b6560]">{applying} to apply · {considering} to consider</p>
+          <h2 className="font-mono text-xl font-semibold text-[#e8e8f0]">{scoredJobs.length} positions found</h2>
+          <p className="text-sm  text-[#7a7a8f]">{applying} to apply · {considering} to consider</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560] whitespace-nowrap">
-            Min score: <span className="font-bold text-[#d97706]">{minScore}</span>
+          <label className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] whitespace-nowrap">
+            Min score: <span className="font-bold text-[#818cf8]">{minScore}</span>
           </label>
           <input
             type="range" min={0} max={90} step={5}
             value={minScore}
             onChange={e => setMinScore(Number(e.target.value))}
-            className="w-28 accent-[#d97706]"
+            className="w-28 accent-[#818cf8]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560] mb-2">Your profile</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-2">Your profile</p>
           <ProfileCard profile={profile} />
         </div>
         <div className="lg:col-span-2 space-y-3">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#6b6560]">
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f]">
             Positions ({filtered.length})
           </p>
           {filtered.length === 0 ? (
-            <div className="bg-[#141210] border border-[#272320] rounded-sm p-8 text-center font-serif text-[#6b6560]">
+            <div className="bg-[#17171c] border border-[#2e2e38] rounded p-8 text-center  text-[#7a7a8f]">
               No positions above score {minScore}. Lower the filter to see more.
             </div>
           ) : (

@@ -5,15 +5,16 @@ export default {
     extend: {
       fontFamily: {
         mono: ['IBM Plex Mono', 'monospace'],
-        serif: ['Source Serif 4', 'Georgia', 'serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'sans-serif'],
       },
       colors: {
-        bg: '#0e0e0e',
-        fg: '#e8e2d9',
-        accent: '#d97706',
-        muted: '#6b6560',
-        border: '#272320',
-        card: '#141210',
+        bg:     '#0f0f12',
+        card:   '#17171c',
+        input:  '#1e1e24',
+        border: '#2e2e38',
+        fg:     '#e8e8f0',
+        muted:  '#7a7a8f',
+        accent: '#818cf8',
       },
     },
   },
