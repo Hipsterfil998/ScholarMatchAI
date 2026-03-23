@@ -19,9 +19,11 @@
     color: var(--fg);
     font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
   }
 }
 
+/* ── Animated underline ─────────────────────────────── */
 .link-underline {
   position: relative;
   text-decoration: none;
@@ -38,4 +40,59 @@
 }
 .link-underline:hover::after {
   width: 100%;
+}
+
+/* ── Gradient text ──────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Dot grid hero background ───────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(circle, #2e2e38 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Keyframe animations ────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50%       { opacity: 0.10; transform: scale(1.05); }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.65s ease forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.65s ease forwards;
+}
+
+.animate-glow {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* ── Scroll reveal ──────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

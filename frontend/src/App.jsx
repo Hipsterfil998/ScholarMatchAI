@@ -3,8 +3,10 @@ import SearchTab from './components/SearchTab.jsx'
 import ResultsTab from './components/ResultsTab.jsx'
 import ReviewTab from './components/ReviewTab.jsx'
 import ExportTab from './components/ExportTab.jsx'
+import LandingPage from './components/LandingPage.jsx'
 
 export default function App() {
+  const [showApp, setShowApp] = useState(false)
   const [tab, setTab] = useState(0)
   const [profile, setProfile] = useState(null)
   const [profileText, setProfileText] = useState('')
@@ -40,6 +42,8 @@ export default function App() {
     })
   }
 
+  if (!showApp) return <LandingPage onStart={() => setShowApp(true)} />
+
   const TABS = [
     { name: 'Search',  badge: null,                    disabled: false },
     { name: 'Results', badge: scoredJobs.length || null, disabled: scoredJobs.length === 0 },
@@ -51,10 +55,12 @@ export default function App() {
     <div className="min-h-screen bg-[#0f0f12] flex flex-col">
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#2e2e38] bg-[#0f0f12]/90 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          <img src="/logo.svg" alt="ScholarMatchAI" className="w-8 h-8 rounded-lg" />
-          <span className="font-mono font-semibold text-sm tracking-wider text-[#e8e8f0]">
-            ScholarMatchAI
-          </span>
+          <button onClick={() => setShowApp(false)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="/logo.svg" alt="ScholarMatchAI" className="w-8 h-8 rounded-lg" />
+            <span className="font-mono font-semibold text-sm tracking-wider text-[#e8e8f0]">
+              ScholarMatchAI
+            </span>
+          </button>
           <div className="ml-auto text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] hidden sm:block">
             Free · No sign-up · Powered by Groq
           </div>
