@@ -55,14 +55,10 @@ function ProfileCard({ profile }) {
 }
 
 function ScoreBadge({ score }) {
-  const cls = score >= 75
-    ? 'border border-emerald-800 text-emerald-500'
-    : score >= 55
-      ? 'border border-amber-800 text-amber-500'
-      : 'border border-red-900 text-red-500'
+  const filled = Math.round(score / 10)
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-mono font-bold ${cls}`}>
-      {score}
+    <span className="text-sm leading-none" title={`${score}/100`}>
+      {'🎓'.repeat(filled)}{'◽'.repeat(10 - filled)}
     </span>
   )
 }
