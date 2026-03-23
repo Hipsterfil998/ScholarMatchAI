@@ -48,36 +48,34 @@ export default function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
-      <header className="bg-gray-900 border-b border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <span className="text-2xl">🎓</span>
-          <div>
-            <h1 className="text-xl font-bold text-white leading-tight">PhdScout</h1>
-            <p className="text-xs text-gray-500">AI-powered academic job search</p>
-          </div>
-          <div className="ml-auto text-xs text-gray-500 hidden sm:block">
+    <div className="min-h-screen bg-[#0e0e0e] flex flex-col">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#272320] bg-[#0e0e0e]/90 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
+          <span className="font-mono font-semibold text-sm tracking-wider text-[#e8e2d9] link-underline">
+            PhdScout
+          </span>
+          <div className="ml-auto text-[10px] font-mono tracking-widest uppercase text-[#6b6560] hidden sm:block">
             Free · No sign-up · Powered by Groq
           </div>
         </div>
         <div className="max-w-6xl mx-auto px-4">
-          <nav className="flex gap-1">
+          <nav className="flex gap-0">
             {TABS.map(({ name, badge, disabled }, i) => (
               <button
                 key={name}
                 onClick={() => !disabled && setTab(i)}
                 className={[
-                  'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                  'px-4 py-2.5 text-[10px] font-mono tracking-widest uppercase border-b-2 transition-colors',
                   tab === i
-                    ? 'border-indigo-500 text-indigo-400'
+                    ? 'border-[#d97706] text-[#d97706]'
                     : disabled
-                      ? 'border-transparent text-gray-700 cursor-not-allowed'
-                      : 'border-transparent text-gray-500 hover:text-gray-300',
+                      ? 'border-transparent text-[#272320] cursor-not-allowed'
+                      : 'border-transparent text-[#6b6560] hover:text-[#e8e2d9]',
                 ].join(' ')}
               >
                 {name}
                 {badge !== null && (
-                  <span className="ml-1.5 text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full px-1.5 py-0.5">
+                  <span className="ml-1.5 text-[9px] text-[#d97706] border border-[#d97706]/40 px-1.5 py-0.5">
                     {badge}
                   </span>
                 )}
@@ -87,7 +85,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 pt-20">
         {tab === 0 && <SearchTab onDone={handleSearchDone} />}
         {tab === 1 && (
           <ResultsTab
@@ -113,8 +111,8 @@ export default function App() {
         {tab === 3 && <ExportTab approved={approved} />}
       </main>
 
-      <footer className="border-t border-gray-800 bg-gray-900">
-        <div className="max-w-6xl mx-auto px-4 py-3 text-xs text-gray-500 flex flex-wrap gap-4">
+      <footer className="border-t border-[#272320]">
+        <div className="max-w-6xl mx-auto px-4 py-3 text-[10px] font-mono tracking-wide text-[#6b6560] flex flex-wrap gap-4">
           <span>© 2025 PhdScout</span>
           <span>CVs are processed in memory and never stored</span>
           <span>Sources: Euraxess · ScholarshipDb · Nature Careers · mlscientist.com</span>

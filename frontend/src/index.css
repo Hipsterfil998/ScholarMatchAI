@@ -2,8 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #0e0e0e;
+  --foreground: #e8e2d9;
+  --accent: #d97706;
+  --muted: #6b6560;
+  --border: #272320;
+  --card: #141210;
+}
+
 @layer base {
   body {
-    @apply bg-gray-950 text-white antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Source Serif 4', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+}
+
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--accent);
+  transition: width 0.25s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
 }
