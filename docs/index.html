@@ -436,7 +436,8 @@
       <div class="hero-badges">
         <span class="badge">100% Free</span>
         <span class="badge">Groq API</span>
-        <span class="badge">Gradio UI</span>
+        <span class="badge">React + Vite</span>
+        <span class="badge">FastAPI</span>
         <span class="badge">Python 3.10+</span>
       </div>
     </div>
@@ -509,12 +510,16 @@
   <!-- ── Installation ───────────────────────────────────────────────── -->
   <section class="section" id="install">
     <h1>Installation</h1>
-    <p>ScholarMatchAI runs locally with Python 3.10+ or on HuggingFace Spaces.</p>
+    <p>ScholarMatchAI has a Python backend (FastAPI) and a React frontend. Both run locally in two terminal windows.</p>
 
-    <h2>Clone & install</h2>
+    <h2>Clone & install backend</h2>
     <pre><code>git clone https://github.com/Hipsterfil998/ScholarMatchAI.git
 cd ScholarMatchAI
 pip install -r requirements.txt</code></pre>
+
+    <h2>Install frontend</h2>
+    <pre><code>cd frontend
+npm install</code></pre>
 
     <h2>Get a Groq API key</h2>
     <div class="callout info">
@@ -528,18 +533,22 @@ pip install -r requirements.txt</code></pre>
 LLM_BACKEND=groq
 GROQ_API_KEY=gsk_your_key_here
 
-<span class="cm"># Optional overrides (see Configuration section)</span>
-OUTPUT_DIR=./output</code></pre>
+<span class="cm"># Optional: override model (default: llama-3.3-70b-versatile)</span>
+GROQ_MODEL=llama-3.3-70b-versatile</code></pre>
 
     <h2>Run</h2>
-    <pre><code>python app.py</code></pre>
-    <p>Open <a href="http://localhost:7860">http://localhost:7860</a> in your browser.</p>
+    <p>Start the backend (terminal 1):</p>
+    <pre><code>python server.py</code></pre>
+    <p>Start the frontend (terminal 2):</p>
+    <pre><code>cd frontend && npm run dev</code></pre>
+    <p>Open <a href="http://localhost:5173">http://localhost:5173</a> in your browser.</p>
 
     <h2>Dependencies</h2>
     <table>
       <tr><th>Package</th><th>Purpose</th></tr>
+      <tr><td><code>fastapi + uvicorn</code></td><td>REST API server</td></tr>
+      <tr><td><code>python-multipart</code></td><td>File upload handling</td></tr>
       <tr><td><code>openai</code></td><td>Groq and Ollama API client (OpenAI-compatible)</td></tr>
-      <tr><td><code>gradio</code></td><td>Web UI</td></tr>
       <tr><td><code>pdfplumber</code></td><td>PDF text extraction</td></tr>
       <tr><td><code>python-docx</code></td><td>DOCX text extraction</td></tr>
       <tr><td><code>beautifulsoup4 + lxml</code></td><td>HTML scraping</td></tr>
@@ -609,22 +618,30 @@ OUTPUT_DIR=./output</code></pre>
   <!-- ── Web UI ─────────────────────────────────────────────────────── -->
   <section class="section" id="web-ui">
     <h1>Web Interface</h1>
-    <p>The Gradio UI is organised into three tabs.</p>
+    <p>The React UI is organised into four tabs. Tabs unlock progressively as you complete each step.</p>
 
-    <h2>Tab 1 — Setup &amp; Search</h2>
+    <h2>Tab 1 — Search</h2>
     <div class="card">
       <table>
         <tr><th>Field</th><th>Description</th></tr>
-        <tr><td><strong>CV upload</strong></td><td>PDF, DOCX, or TXT file</td></tr>
-        <tr><td><strong>Research field</strong></td><td>Free-text or comma-separated list</td></tr>
-        <tr><td><strong>Location</strong></td><td>40+ countries or custom value</td></tr>
+        <tr><td><strong>CV upload</strong></td><td>PDF, DOCX, or TXT — drag &amp; drop or click to browse</td></tr>
+        <tr><td><strong>Research field</strong></td><td>Free-text (e.g. <em>"machine learning, NLP"</em>)</td></tr>
+        <tr><td><strong>Location</strong></td><td>40+ countries or regional options (Europe all, Worldwide)</td></tr>
         <tr><td><strong>Position type</strong></td><td>PhD, postdoc, predoctoral, fellowship, research staff</td></tr>
-        <tr><td><strong>Min. match score</strong></td><td>Threshold for the "above score" count (all positions still visible)</td></tr>
+        <tr><td><strong>Min. match score</strong></td><td>Clickable 🎓 rating (10–100). Filters the Results view — all positions still downloadable.</td></tr>
       </table>
     </div>
+    <p>Click <strong>Parse CV &amp; Search Positions</strong>. A progress bar tracks the three steps: CV parsing → job board search (~60s) → AI scoring.</p>
 
     <h2>Tab 2 — Results</h2>
-    <p>Displays a scored table with columns: <strong>#</strong>, <strong>Score</strong>, <strong>Title</strong>, <strong>Institution</strong>, <strong>Type</strong>, <strong>Freshness</strong>, <strong>Rec.</strong>, <strong>Why good fit</strong>.</p>
+    <p>All scored positions shown as cards, sorted by match score. Each card shows:</p>
+    <ul>
+      <li>🎓 score bar (filled caps out of 10)</li>
+      <li>Recommendation badge: <strong>Apply</strong> / <strong>Consider</strong> / <strong>Skip</strong></li>
+      <li>Institution, location, position type, freshness</li>
+      <li><em>Why good fit</em> snippet from the AI</li>
+    </ul>
+    <p>Use the score slider to filter. Click <strong>Review →</strong> on any card to jump directly to that position.</p>
 
     <h3>Freshness labels</h3>
     <table>
@@ -640,29 +657,38 @@ OUTPUT_DIR=./output</code></pre>
       <p>Expired listings (deadline already passed, or posted in a previous year) are automatically excluded from results.</p>
     </div>
 
-    <h2>Tab 3 — Review &amp; Edit</h2>
-    <p>Select a position from the dropdown, click <strong>Load Position</strong>, then:</p>
+    <h2>Tab 3 — Review</h2>
+    <p>Select a position from the dropdown, click <strong>Load</strong>, then:</p>
     <ul>
-      <li>Read the <strong>Position Details</strong> and match analysis</li>
-      <li>Follow the <strong>CV Tailoring Hints</strong> panel</li>
-      <li>Edit the <strong>Cover Letter</strong> draft freely</li>
-      <li>Click <strong>Regenerate</strong> for a different version</li>
+      <li>Read <strong>Position Details</strong> and match analysis (score, matching areas, concerns, missing requirements)</li>
+      <li>Follow the <strong>CV Tailoring Hints</strong> panel (keywords, skills, section order)</li>
+      <li>Edit the <strong>Cover Letter</strong> draft freely in the textarea</li>
+      <li>Click <strong>Regenerate Letter</strong> for a different version</li>
       <li>Download the letter as a <strong>.txt</strong> file</li>
+      <li>Add personal <strong>Notes</strong> (stored locally, included in ZIP)</li>
       <li>Click <strong>Approve &amp; Save</strong> to add it to the export queue</li>
     </ul>
+
+    <h2>Tab 4 — Export</h2>
+    <p>Lists all approved applications. Click <strong>Download ZIP</strong> to get a single archive containing one folder per position, each with the cover letter and a position summary.</p>
   </section>
 
   <!-- ── CLI ────────────────────────────────────────────────────────── -->
   <section class="section" id="cli">
-    <h1>Command-Line Interface</h1>
-    <p>For batch use or scripting, ScholarMatchAI exposes a CLI via <code>main.py</code>.</p>
+    <h1>REST API &amp; Python SDK</h1>
+    <p>The FastAPI backend exposes a REST API at <code>http://localhost:8000</code>. You can use it directly or via the Python agent SDK.</p>
 
-    <h2>Basic usage</h2>
-    <pre><code>python main.py \
-  --cv path/to/cv.pdf \
-  --field "machine learning" \
-  --location "Germany" \
-  --type phd</code></pre>
+    <h2>API endpoints</h2>
+    <table>
+      <tr><th>Method + Path</th><th>Description</th></tr>
+      <tr><td><code>GET /health</code></td><td>Health check</td></tr>
+      <tr><td><code>POST /api/parse-cv</code></td><td>Upload CV → structured profile + profile_text</td></tr>
+      <tr><td><code>POST /api/search-jobs</code></td><td>Search job boards by field, location, type</td></tr>
+      <tr><td><code>POST /api/score-jobs</code></td><td>Score a list of jobs against a profile</td></tr>
+      <tr><td><code>POST /api/prepare</code></td><td>Generate CV hints + cover letter for one job</td></tr>
+      <tr><td><code>POST /api/regenerate</code></td><td>Regenerate cover letter</td></tr>
+      <tr><td><code>POST /api/export</code></td><td>Package approved applications into a ZIP</td></tr>
+    </table>
 
     <h2>Options</h2>
     <table>
@@ -674,11 +700,11 @@ OUTPUT_DIR=./output</code></pre>
       <tr><td><code>--min-score</code></td><td><code>60</code></td><td>Minimum match score to show</td></tr>
     </table>
 
-    <h2>Python API</h2>
+    <h2>Python SDK</h2>
     <pre><code><span class="kw">from</span> agent <span class="kw">import</span> JobAgent
 
 agent = JobAgent(
-    model=<span class="st">"llama-3.1-8b-instant"</span>,
+    model=<span class="st">"llama-3.3-70b-versatile"</span>,
     backend=<span class="st">"groq"</span>,
     api_key=<span class="st">"gsk_..."</span>,
 )
@@ -771,14 +797,14 @@ scored = agent.score_jobs(jobs, profile_text)
   <!-- ── Configuration ──────────────────────────────────────────────── -->
   <section class="section" id="config">
     <h1>Configuration</h1>
-    <p>All settings live in <code>config.py</code>. Edit the file directly — no restart needed if using the CLI, restart the Gradio app after changes.</p>
+    <p>All settings live in <code>config.py</code>. Edit the file directly and restart <code>server.py</code> to apply changes.</p>
 
     <h2>LLM settings</h2>
     <table>
       <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-      <tr><td><code>default_model</code></td><td><code>llama-3.1-8b-instant</code></td><td>Groq model to use</td></tr>
+      <tr><td><code>default_model</code></td><td><code>llama-3.3-70b-versatile</code></td><td>Groq model (overridable via <code>GROQ_MODEL</code> env var)</td></tr>
       <tr><td><code>max_tokens</code></td><td><code>4096</code></td><td>Max tokens per LLM response</td></tr>
-      <tr><td><code>llm_backend</code></td><td><code>ollama</code></td><td>Backend: <code>groq</code> | <code>huggingface</code> | <code>ollama</code></td></tr>
+      <tr><td><code>llm_backend</code></td><td><code>groq</code></td><td>Backend: <code>groq</code> | <code>ollama</code></td></tr>
     </table>
 
     <h2>Scraper settings</h2>
@@ -795,19 +821,12 @@ scored = agent.score_jobs(jobs, profile_text)
       <tr><td><code>deadline_warn_days</code></td><td><code>14</code></td><td>Days until deadline → 🔴 Closing soon</td></tr>
     </table>
 
-    <h2>UI defaults</h2>
-    <table>
-      <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-      <tr><td><code>min_score_default</code></td><td><code>60</code></td><td>Default minimum match score slider value</td></tr>
-    </table>
-
     <h2>Environment variables</h2>
     <table>
       <tr><th>Variable</th><th>Description</th></tr>
-      <tr><td><code>GROQ_API_KEY</code></td><td>Groq API key (takes priority over HF_TOKEN)</td></tr>
-      <tr><td><code>HF_TOKEN</code></td><td>HuggingFace token (fallback backend)</td></tr>
-      <tr><td><code>LLM_BACKEND</code></td><td>Override backend: <code>groq</code> | <code>huggingface</code> | <code>ollama</code></td></tr>
-      <tr><td><code>OUTPUT_DIR</code></td><td>Output directory for ZIP exports (default: <code>./output</code>)</td></tr>
+      <tr><td><code>GROQ_API_KEY</code></td><td>Groq API key — required</td></tr>
+      <tr><td><code>LLM_BACKEND</code></td><td>Override backend: <code>groq</code> | <code>ollama</code></td></tr>
+      <tr><td><code>GROQ_MODEL</code></td><td>Override model name (default: <code>llama-3.3-70b-versatile</code>)</td></tr>
     </table>
   </section>
 
@@ -858,37 +877,47 @@ The letter should be <span class="st">250-350 words (2-3 paragraphs)</span>.</co
     <h2>Project structure</h2>
     <div class="tree">
 <span class="dir">ScholarMatchAI/</span>
-├── <span class="file">app.py</span>              <span class="note"># Gradio web interface</span>
+├── <span class="file">server.py</span>           <span class="note"># FastAPI backend (6 REST endpoints)</span>
 ├── <span class="file">config.py</span>           <span class="note"># Runtime settings (model, thresholds, delays)</span>
-├── <span class="file">main.py</span>             <span class="note"># CLI entry point</span>
 ├── <span class="file">requirements.txt</span>
-├── <span class="dir">agent/</span>
-│   ├── <span class="file">__init__.py</span>         <span class="note"># Public API: JobAgent, LLMQuotaError</span>
-│   ├── <span class="file">pipeline.py</span>         <span class="note"># JobAgent orchestrator</span>
-│   ├── <span class="file">base_service.py</span>     <span class="note"># BaseLLMService base class</span>
-│   ├── <span class="file">llm_client.py</span>       <span class="note"># Groq / HuggingFace / Ollama client</span>
-│   ├── <span class="file">utils.py</span>            <span class="note"># JSON parsing, shared helpers</span>
-│   ├── <span class="dir">prompts/</span>            <span class="note"># LLM prompts — one file per service</span>
-│   │   ├── <span class="file">cv_parser.py</span>    <span class="note"># CV extraction prompts</span>
-│   │   ├── <span class="file">job_matcher.py</span>  <span class="note"># Scoring + eligibility gate prompts</span>
-│   │   ├── <span class="file">cv_tailor.py</span>    <span class="note"># Tailoring hints prompts</span>
-│   │   └── <span class="file">cover_letter.py</span> <span class="note"># Cover letter prompts</span>
-│   ├── <span class="dir">cv/</span>                 <span class="note"># CV-related services</span>
-│   │   ├── <span class="file">parser.py</span>       <span class="note"># CV extraction + LLM parsing</span>
-│   │   ├── <span class="file">tailor.py</span>       <span class="note"># Tailoring hints generator</span>
-│   │   └── <span class="file">cover_letter.py</span> <span class="note"># Cover letter writer</span>
-│   ├── <span class="dir">matching/</span>           <span class="note"># Scoring engine</span>
-│   │   └── <span class="file">matcher.py</span>      <span class="note"># JobMatcher + PhD eligibility cap</span>
-│   └── <span class="dir">search/</span>             <span class="note"># Job search infrastructure</span>
-│       ├── <span class="file">searcher.py</span>     <span class="note"># JobSearcher (orchestrates scrapers)</span>
-│       └── <span class="dir">scrapers/</span>
-│           ├── <span class="file">base.py</span>           <span class="note"># BaseScraper ABC + shared helpers</span>
-│           ├── <span class="file">euraxess.py</span>       <span class="note"># EU/worldwide research portal</span>
-│           ├── <span class="file">mlscientist.py</span>    <span class="note"># ML &amp; AI academic positions</span>
-│           ├── <span class="file">jobs_ac_uk.py</span>     <span class="note"># UK academic jobs (UK/worldwide only)</span>
-│           ├── <span class="file">scholarshipdb.py</span>  <span class="note"># Worldwide aggregator (28k+ positions)</span>
-│           └── <span class="file">nature_careers.py</span> <span class="note"># nature.com/careers — multidisciplinary</span>
-└── <span class="dir">tests/</span>              <span class="note"># 156 unit tests (pytest)</span>
+├── <span class="file">Dockerfile</span>          <span class="note"># Backend container (Render deployment)</span>
+├── <span class="file">render.yaml</span>         <span class="note"># Render service definition</span>
+├── <span class="dir">frontend/</span>           <span class="note"># React + Vite + Tailwind SPA</span>
+│   ├── <span class="file">index.html</span>
+│   ├── <span class="file">vite.config.js</span>      <span class="note"># Dev proxy → localhost:8000</span>
+│   └── <span class="dir">src/</span>
+│       ├── <span class="file">App.jsx</span>         <span class="note"># Root: tab routing + shared state</span>
+│       ├── <span class="file">api.js</span>          <span class="note"># Axios calls to FastAPI</span>
+│       ├── <span class="file">constants.js</span>    <span class="note"># LOCATIONS, POSITION_TYPES, REC_CONFIG</span>
+│       └── <span class="dir">components/</span>
+│           ├── <span class="file">SearchTab.jsx</span>   <span class="note"># CV upload + search parameters</span>
+│           ├── <span class="file">ResultsTab.jsx</span>  <span class="note"># Scored job cards + profile card</span>
+│           ├── <span class="file">ReviewTab.jsx</span>   <span class="note"># Cover letter editor + CV hints</span>
+│           └── <span class="file">ExportTab.jsx</span>   <span class="note"># ZIP download of approved applications</span>
+└── <span class="dir">agent/</span>
+    ├── <span class="file">__init__.py</span>         <span class="note"># Public API: JobAgent, LLMQuotaError</span>
+    ├── <span class="file">pipeline.py</span>         <span class="note"># JobAgent orchestrator</span>
+    ├── <span class="file">llm_client.py</span>       <span class="note"># Groq / Ollama client</span>
+    ├── <span class="file">utils.py</span>            <span class="note"># JSON parsing, shared helpers</span>
+    ├── <span class="dir">prompts/</span>            <span class="note"># LLM prompts — one file per service</span>
+    │   ├── <span class="file">cv_parser.py</span>
+    │   ├── <span class="file">job_matcher.py</span>
+    │   ├── <span class="file">cv_tailor.py</span>
+    │   └── <span class="file">cover_letter.py</span>
+    ├── <span class="dir">cv/</span>
+    │   ├── <span class="file">parser.py</span>       <span class="note"># CV extraction + LLM parsing</span>
+    │   ├── <span class="file">tailor.py</span>       <span class="note"># CV tailoring hints generator</span>
+    │   └── <span class="file">cover_letter.py</span> <span class="note"># Cover letter writer</span>
+    ├── <span class="dir">matching/</span>
+    │   └── <span class="file">matcher.py</span>      <span class="note"># JobMatcher + PhD eligibility cap</span>
+    └── <span class="dir">search/</span>
+        ├── <span class="file">searcher.py</span>     <span class="note"># JobSearcher (orchestrates scrapers)</span>
+        └── <span class="dir">scrapers/</span>
+            ├── <span class="file">euraxess.py</span>
+            ├── <span class="file">mlscientist.py</span>
+            ├── <span class="file">jobs_ac_uk.py</span>
+            ├── <span class="file">scholarshipdb.py</span>
+            └── <span class="file">nature_careers.py</span>
     </div>
 
     <h2>Pipeline flow</h2>
@@ -917,43 +946,70 @@ The letter should be <span class="st">250-350 words (2-3 paragraphs)</span>.</co
       <tr><th>Backend</th><th>env var</th><th>Notes</th></tr>
       <tr><td><strong>Groq</strong> (recommended)</td><td><code>GROQ_API_KEY</code></td><td>Free tier, fast, OpenAI-compatible</td></tr>
       <tr><td><strong>Ollama</strong></td><td>—</td><td>Local inference, set <code>LLM_BACKEND=ollama</code></td></tr>
-      <tr><td><strong>HuggingFace</strong></td><td><code>HF_TOKEN</code></td><td>Fallback, free tier has rate limits</td></tr>
     </table>
   </section>
 
   <!-- ── Deployment ─────────────────────────────────────────────────── -->
   <section class="section" id="deployment">
     <h1>Deployment</h1>
+    <p>The production setup uses <strong>Render</strong> for the backend and <strong>Vercel</strong> for the frontend — both have free tiers.</p>
 
-    <h2>HuggingFace Spaces (recommended)</h2>
+    <h2>Backend — Render</h2>
     <div class="card">
       <div class="steps">
         <div class="step">
           <div class="step-num"></div>
           <div class="step-body">
-            <strong>Fork or create a Space</strong>
-            <p>Go to <a href="https://huggingface.co/spaces" target="_blank">huggingface.co/spaces</a> → New Space → SDK: Gradio.</p>
+            <strong>Connect the repo</strong>
+            <p>Go to <a href="https://render.com" target="_blank">render.com</a> → New → Web Service → connect your GitHub repo.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num"></div>
           <div class="step-body">
-            <strong>Push the code</strong>
-            <p>Add the Space as a remote and push: <code>git push space main</code></p>
+            <strong>Set environment variables</strong>
+            <p>In the Render dashboard add <code>GROQ_API_KEY</code> (and optionally <code>GROQ_MODEL</code>).</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num"></div>
           <div class="step-body">
-            <strong>Set secrets</strong>
-            <p>In Space Settings → Variables and Secrets, add <code>GROQ_API_KEY</code>.</p>
+            <strong>Deploy</strong>
+            <p>Render picks up <code>render.yaml</code> and <code>Dockerfile</code> automatically. The service starts on port 8000.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Frontend — Vercel</h2>
+    <div class="card">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <strong>Import the repo</strong>
+            <p>Go to <a href="https://vercel.com" target="_blank">vercel.com</a> → Add New Project → import from GitHub.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num"></div>
           <div class="step-body">
-            <strong>Add HF frontmatter to README</strong>
-            <p>Run <code>./push_to_hf.sh</code> — it injects the required YAML frontmatter automatically.</p>
+            <strong>Set root directory</strong>
+            <p>In project settings, set Root Directory to <code>frontend</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <strong>Add environment variable</strong>
+            <p>Add <code>VITE_API_URL</code> pointing to your Render backend URL (e.g. <code>https://scholarmatchai-api.onrender.com</code>).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <strong>Deploy</strong>
+            <p>Vercel builds with <code>npm run build</code> and serves the static assets automatically.</p>
           </div>
         </div>
       </div>
