@@ -56,7 +56,7 @@ function JobDetails({ job }) {
         )}
       </div>
 
-      <div className="border border-[#2e2e38] rounded-lg p-4 space-y-3">
+      <div className="border border-[#2e2e38] p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-mono text-[#e8e8f0]">Match score</p>
           <span className="font-mono font-bold text-[#e8e8f0]">{score}/100</span>
@@ -265,7 +265,7 @@ export default function ReviewTab({
   return (
     <div className="space-y-5">
       {/* Position selector */}
-      <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-4">
+      <div className="bg-[#17171c] border border-[#2e2e38] p-4">
         <div className="flex gap-3 items-end">
           <div className="flex-1">
             <label className={`block ${SECTION_LABEL} mb-1.5`}>Select position to review</label>
@@ -299,11 +299,11 @@ export default function ReviewTab({
       {job && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-5">
+            <div className="bg-[#17171c] border border-[#2e2e38] p-5">
               <p className={`${SECTION_LABEL} mb-3`}>Position details</p>
               <JobDetails job={job} />
             </div>
-            <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-5">
+            <div className="bg-[#17171c] border border-[#2e2e38] p-5">
               <p className={`${SECTION_LABEL} mb-3`}>CV tailoring hints</p>
               {loading
                 ? <p className="text-sm  text-[#7a7a8f] animate-pulse">Generating hints…</p>
@@ -312,7 +312,7 @@ export default function ReviewTab({
             </div>
           </div>
 
-          <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-5 space-y-3">
+          <div className="bg-[#17171c] border border-[#2e2e38] p-5 space-y-3">
             <div className="flex items-center justify-between">
               <p className={SECTION_LABEL}>Cover letter draft</p>
               <p className="text-[10px] font-mono text-[#7a7a8f]">Edit before sending · remove the DRAFT header</p>
@@ -366,7 +366,7 @@ export default function ReviewTab({
       )}
 
       {!job && (
-        <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-12 text-center  text-[#7a7a8f]">
+        <div className="bg-[#17171c] border border-[#2e2e38] p-12 text-center  text-[#7a7a8f]">
           Select a position above and click Load to start reviewing.
         </div>
       )}

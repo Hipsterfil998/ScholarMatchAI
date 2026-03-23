@@ -30,7 +30,7 @@ export default function ExportTab({ approved }) {
   if (approved.length === 0) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-12 text-center  text-[#7a7a8f]">
+        <div className="bg-[#17171c] border border-[#2e2e38] p-12 text-center  text-[#7a7a8f]">
           <p className="font-mono text-sm mb-2">No applications approved yet.</p>
           <p className="text-sm mt-1">Go to the Review tab to approve positions.</p>
         </div>
@@ -76,7 +76,7 @@ export default function ExportTab({ approved }) {
               : 'border border-red-900 text-red-500'
 
           return (
-            <div key={i} className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-4 hover:border-[#818cf8]/40 transition-colors">
+            <div key={i} className="bg-[#17171c] border border-[#2e2e38] p-4 hover:border-[#818cf8]/40 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

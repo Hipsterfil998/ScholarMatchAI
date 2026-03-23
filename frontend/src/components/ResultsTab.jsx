@@ -10,7 +10,7 @@ function ProfileCard({ profile }) {
   const allSkills = [...(skills.programming || []), ...(skills.tools || [])].slice(0, 12)
 
   return (
-    <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-5 space-y-3">
+    <div className="bg-[#17171c] border border-[#2e2e38] p-5 space-y-3">
       <div>
         <h3 className="font-mono font-semibold text-[#e8e8f0] text-base">{profile.name || 'Unknown'}</h3>
         {contact.email && <p className="text-xs font-mono text-[#7a7a8f]">{contact.email}</p>}
@@ -71,7 +71,7 @@ function JobCard({ job, idx, onSelect }) {
   const institution = job.institution || job.company || ''
 
   return (
-    <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-4 hover:border-[#818cf8]/40 transition-colors">
+    <div className="bg-[#17171c] border border-[#2e2e38] p-4 hover:border-[#818cf8]/40 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -150,7 +150,7 @@ export default function ResultsTab({ profile, scoredJobs, onSelectJob }) {
             Positions ({filtered.length})
           </p>
           {filtered.length === 0 ? (
-            <div className="bg-[#17171c] border border-[#2e2e38] rounded-lg p-8 text-center  text-[#7a7a8f]">
+            <div className="bg-[#17171c] border border-[#2e2e38] p-8 text-center  text-[#7a7a8f]">
               No positions above score {minScore}. Lower the filter to see more.
             </div>
           ) : (
