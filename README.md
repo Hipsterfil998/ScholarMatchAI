@@ -130,7 +130,7 @@ If you use ScholarMatchAI in your research or project, please cite it as:
 
 ```bibtex
 @software{pellegrino2026scholarmatchai,
-  author  = {Pellegrino, Filippo},
+  author  = {Pellegrhe ino, Filippo},
   title   = {{ScholarMatchAI}: an AI-powered search and application tool for academic positions},
   year    = {2026},
   url     = {https://github.com/Hipsterfil998/ScholarMatchAI},
