@@ -35,3 +35,8 @@ Thumbs.db
 tmp/
 temp/
 .claude/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local

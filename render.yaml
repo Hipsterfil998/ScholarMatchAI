@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: phdscout-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PORT
+        value: 8000
