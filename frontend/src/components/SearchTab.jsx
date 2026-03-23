@@ -146,7 +146,7 @@ export default function SearchTab({ onDone }) {
       {/* Min score */}
       <div>
         <label className="block text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1.5">
-          Minimum match score: <span className="font-bold text-[#818cf8] normal-case">{minScore}</span>
+          Minimum match score: <span className="normal-case text-base leading-none">{'🎓'.repeat(Math.round(minScore / 10))}{'◽'.repeat(10 - Math.round(minScore / 10))}</span>
         </label>
         <input
           type="range"
