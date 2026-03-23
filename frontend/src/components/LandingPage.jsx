@@ -144,17 +144,26 @@ export default function LandingPage({ onStart }) {
             style={{ animationDelay: '0.1s' }}
           >
             Find your next<br />
-            <span className="gradient-text">academic position</span><br />
+            <span className="gradient-text">academic position</span>,<br />
+            prepare your application<br />
             with AI
           </h1>
 
           {/* subtitle */}
           <p
-            className="animate-fade-in-up text-lg text-[#7a7a8f] max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="animate-fade-in-up text-lg text-[#7a7a8f] max-w-2xl mx-auto mb-4 leading-relaxed"
             style={{ animationDelay: '0.22s' }}
           >
             Upload your CV, set your research field and location. ScholarMatchAI searches 5 job boards,
             scores every position against your profile, and drafts a tailored cover letter. All in under 3 minutes.
+          </p>
+          <p
+            className="animate-fade-in-up text-sm text-[#7a7a8f] max-w-xl mx-auto mb-10 leading-relaxed border-l-2 border-[#818cf8]/50 bg-[#17171c] px-4 py-3 text-left"
+            style={{ animationDelay: '0.28s' }}
+          >
+            ScholarMatchAI is a human-in-the-loop tool. The AI handles the tedious parts — searching, scoring, and drafting — but{' '}
+            <span className="text-[#e8e8f0] font-medium">every decision is yours</span>.
+            {' '}Read, edit, and approve each application before sending it.
           </p>
 
           {/* CTAs */}

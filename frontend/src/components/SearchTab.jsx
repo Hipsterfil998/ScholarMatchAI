@@ -9,7 +9,7 @@ const STEPS = [
   { key: 'done',   label: 'Done!',                       pct: 100 },
 ]
 
-const INPUT_CLS = 'w-full bg-[#0f0f12] border border-[#2e2e38] text-[#e8e8f0] placeholder-[#7a7a8f] focus:border-[#818cf8] focus:outline-none text-sm  px-3 py-2'
+const INPUT_CLS = 'w-full bg-[#0f0f12] border border-[#2e2e38] text-[#e8e8f0] placeholder-[#7a7a8f] focus:border-[#818cf8] focus:outline-none text-sm px-3 py-2'
 const SELECT_CLS = INPUT_CLS
 
 export default function SearchTab({ onDone }) {
@@ -28,15 +28,6 @@ export default function SearchTab({ onDone }) {
     setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) setCvFile(file)
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault()
-    setDragging(true)
-  }
-
-  function handleDragLeave() {
-    setDragging(false)
   }
 
   async function handleSearch() {
@@ -70,12 +61,14 @@ export default function SearchTab({ onDone }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Hero */}
-      <div className="py-6">
-        <h2 className="font-mono text-2xl font-semibold tracking-tight text-[#e8e8f0]">
-          Find your next academic position
+
+      {/* Section header */}
+      <div className="py-8">
+        <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-3">Academic job search</p>
+        <h2 className="text-3xl font-bold text-[#e8e8f0] leading-tight">
+          Find your next<br />academic position
         </h2>
-        <p className="mt-2 text-sm  text-[#7a7a8f]">
+        <p className="mt-3 text-sm text-[#7a7a8f] leading-relaxed max-w-lg">
           Upload your CV, set your search parameters, and let AI find and score matching positions.
         </p>
       </div>
@@ -83,14 +76,12 @@ export default function SearchTab({ onDone }) {
       {/* CV Upload */}
       <div
         onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+        onDragOver={e => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
         onClick={() => document.getElementById('cv-input').click()}
         className={[
-          'border border-dashed p-8 text-center transition-colors cursor-pointer',
-          dragging
-            ? 'border-[#818cf8]/60'
-            : 'border-[#2e2e38] hover:border-[#818cf8]/60',
+          'border border-dashed p-8 text-center transition-colors cursor-pointer bg-[#17171c] hover:bg-[#1c1c23]',
+          dragging ? 'border-[#818cf8]/60' : 'border-[#2e2e38] hover:border-[#818cf8]/40',
         ].join(' ')}
       >
         <input
@@ -128,14 +119,14 @@ export default function SearchTab({ onDone }) {
       </div>
 
       {/* Location + Position type */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
+      <div className="grid grid-cols-2 gap-px bg-[#2e2e38]">
+        <div className="bg-[#0f0f12] p-4">
           <label className="block text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1.5">Location</label>
           <select value={location} onChange={e => setLocation(e.target.value)} className={SELECT_CLS}>
             {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
           </select>
         </div>
-        <div>
+        <div className="bg-[#0f0f12] p-4">
           <label className="block text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1.5">Position type</label>
           <select value={positionType} onChange={e => setPositionType(e.target.value)} className={SELECT_CLS}>
             {POSITION_TYPES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
@@ -144,8 +135,8 @@ export default function SearchTab({ onDone }) {
       </div>
 
       {/* Min score */}
-      <div>
-        <label className="block text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-2">
+      <div className="bg-[#17171c] border border-[#2e2e38] p-4">
+        <label className="block text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-3">
           Minimum match score
         </label>
         <div className="flex gap-1">
@@ -165,28 +156,28 @@ export default function SearchTab({ onDone }) {
             )
           })}
         </div>
-        <p className="text-[10px] font-mono text-[#7a7a8f] mt-1">
+        <p className="text-[10px] font-mono text-[#7a7a8f] mt-2">
           {minScore}/100 — {minScore <= 40 ? 'more results' : minScore >= 80 ? 'higher quality' : 'balanced'}
         </p>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="border border-red-900 p-3 text-sm  text-red-400">
+        <div className="border border-red-900 bg-red-950/20 p-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {/* Progress */}
       {loading && (
-        <div className="space-y-2">
+        <div className="bg-[#17171c] border border-[#2e2e38] p-4 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="font-mono text-[#e8e8f0]">{currentStep.label}</span>
-            <span className="font-mono text-[#7a7a8f]">{currentStep.pct}%</span>
+            <span className="font-mono text-[#818cf8] font-bold">{currentStep.pct}%</span>
           </div>
-          <div className="w-full bg-[#17171c] border border-[#2e2e38] h-1.5">
+          <div className="w-full bg-[#0f0f12] border border-[#2e2e38] h-1">
             <div
-              className="bg-[#818cf8] h-1.5 transition-all duration-500"
+              className="bg-[#818cf8] h-1 transition-all duration-500"
               style={{ width: `${currentStep.pct}%` }}
             />
           </div>
@@ -198,17 +189,18 @@ export default function SearchTab({ onDone }) {
       <button
         onClick={handleSearch}
         disabled={loading}
-        className="w-full border border-[#818cf8] text-[#818cf8] font-mono text-xs tracking-widest uppercase py-3 px-6 hover:bg-[#818cf8] hover:text-[#0f0f12] transition-colors disabled:border-[#2e2e38] disabled:text-[#7a7a8f] disabled:cursor-not-allowed"
+        className="w-full bg-[#818cf8] text-[#0f0f12] font-mono text-xs font-semibold tracking-widest uppercase py-3.5 px-6 hover:bg-[#a5b4fc] transition-colors disabled:bg-[#2e2e38] disabled:text-[#7a7a8f] disabled:cursor-not-allowed"
       >
         {loading ? 'Searching…' : 'Parse CV & Search Positions'}
       </button>
 
       {/* Info box */}
-      <div className="border border-[#2e2e38] p-4 text-xs  text-[#7a7a8f] space-y-1">
-        <p>Your CV is processed in memory and never stored on our servers.</p>
-        <p>100% free — powered by Groq free API. No sign-up required.</p>
-        <p>Searches Euraxess, ScholarshipDb, Nature Careers, mlscientist.com, and jobs.ac.uk (UK).</p>
+      <div className="flex flex-col gap-px bg-[#2e2e38] text-xs font-mono text-[#7a7a8f]">
+        <p className="bg-[#17171c] px-4 py-2.5">Your CV is processed in memory and never stored on our servers.</p>
+        <p className="bg-[#17171c] px-4 py-2.5">100% free — powered by Groq free API. No sign-up required.</p>
+        <p className="bg-[#17171c] px-4 py-2.5">Searches Euraxess, ScholarshipDb, Nature Careers, mlscientist.com, and jobs.ac.uk.</p>
       </div>
+
     </div>
   )
 }

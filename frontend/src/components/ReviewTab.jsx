@@ -263,7 +263,15 @@ export default function ReviewTab({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+
+      {/* Section header */}
+      <div className="py-4">
+        <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-2">Application review</p>
+        <h2 className="text-3xl font-bold text-[#e8e8f0]">Review & edit</h2>
+        <p className="text-sm text-[#7a7a8f] mt-1">Load a position to see CV tailoring hints and generate a cover letter.</p>
+      </div>
+
       {/* Position selector */}
       <div className="bg-[#17171c] border border-[#2e2e38] p-4">
         <div className="flex gap-3 items-end">
@@ -298,21 +306,21 @@ export default function ReviewTab({
 
       {job && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div className="bg-[#17171c] border border-[#2e2e38] p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-[#2e2e38]">
+            <div className="bg-[#17171c] p-5">
               <p className={`${SECTION_LABEL} mb-3`}>Position details</p>
               <JobDetails job={job} />
             </div>
-            <div className="bg-[#17171c] border border-[#2e2e38] p-5">
+            <div className="bg-[#17171c] p-5">
               <p className={`${SECTION_LABEL} mb-3`}>CV tailoring hints</p>
               {loading
-                ? <p className="text-sm  text-[#7a7a8f] animate-pulse">Generating hints…</p>
+                ? <p className="text-sm text-[#7a7a8f] animate-pulse">Generating hints…</p>
                 : <HintsPanel hints={currentHints} />
               }
             </div>
           </div>
 
-          <div className="bg-[#17171c] border border-[#2e2e38] p-5 space-y-3">
+          <div className="bg-[#17171c] border border-[#2e2e38] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className={SECTION_LABEL}>Cover letter draft</p>
               <p className="text-[10px] font-mono text-[#7a7a8f]">Edit before sending · remove the DRAFT header</p>

@@ -20,7 +20,7 @@ function ProfileCard({ profile }) {
         )}
       </div>
       {profile.summary && (
-        <p className="text-sm  text-[#7a7a8f] leading-relaxed">{profile.summary}</p>
+        <p className="text-sm text-[#7a7a8f] leading-relaxed">{profile.summary}</p>
       )}
       {interests.length > 0 && (
         <div>
@@ -38,7 +38,7 @@ function ProfileCard({ profile }) {
         <div>
           <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1">Education</p>
           {education.slice(0, 2).map((e, idx) => (
-            <p key={idx} className="text-xs  text-[#7a7a8f]">
+            <p key={idx} className="text-xs text-[#7a7a8f]">
               {e.degree} in {e.field} — {e.institution} ({e.year})
             </p>
           ))}
@@ -47,7 +47,7 @@ function ProfileCard({ profile }) {
       {allSkills.length > 0 && (
         <div>
           <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-1">Skills</p>
-          <p className="text-xs  text-[#7a7a8f]">{allSkills.join(', ')}</p>
+          <p className="text-xs text-[#7a7a8f]">{allSkills.join(', ')}</p>
         </div>
       )}
     </div>
@@ -71,7 +71,7 @@ function JobCard({ job, idx, onSelect }) {
   const institution = job.institution || job.company || ''
 
   return (
-    <div className="bg-[#17171c] border border-[#2e2e38] p-4 hover:border-[#818cf8]/40 transition-colors">
+    <div className="bg-[#17171c] p-4 hover:bg-[#1c1c23] transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -95,7 +95,7 @@ function JobCard({ job, idx, onSelect }) {
             {job.type ? ` · ${job.type}` : ''}
           </p>
           {match.why_good_fit && (
-            <p className="mt-1.5 text-xs  text-[#7a7a8f] line-clamp-2">
+            <p className="mt-1.5 text-xs text-[#7a7a8f] line-clamp-2">
               <span className="font-semibold text-[#e8e8f0]/60">Why: </span>
               {match.why_good_fit}
             </p>
@@ -121,13 +121,16 @@ export default function ResultsTab({ profile, scoredJobs, onSelectJob }) {
   const considering = filtered.filter(j => j.match?.recommendation === 'consider').length
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex-1">
-          <h2 className="font-mono text-xl font-semibold text-[#e8e8f0]">{scoredJobs.length} positions found</h2>
-          <p className="text-sm  text-[#7a7a8f]">{applying} to apply · {considering} to consider</p>
+    <div className="space-y-8">
+
+      {/* Section header */}
+      <div className="py-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-2">Search results</p>
+          <h2 className="text-3xl font-bold text-[#e8e8f0]">{scoredJobs.length} positions found</h2>
+          <p className="text-sm text-[#7a7a8f] mt-1">{applying} to apply · {considering} to consider</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <label className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] whitespace-nowrap">
             Min score: <span className="font-bold text-[#818cf8]">{minScore}</span>
           </label>
@@ -141,27 +144,32 @@ export default function ResultsTab({ profile, scoredJobs, onSelectJob }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Profile */}
         <div className="lg:col-span-1">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-2">Your profile</p>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-3">Your profile</p>
           <ProfileCard profile={profile} />
         </div>
-        <div className="lg:col-span-2 space-y-3">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f]">
+
+        {/* Job list */}
+        <div className="lg:col-span-2">
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f] mb-3">
             Positions ({filtered.length})
           </p>
           {filtered.length === 0 ? (
-            <div className="bg-[#17171c] border border-[#2e2e38] p-8 text-center  text-[#7a7a8f]">
+            <div className="bg-[#17171c] border border-[#2e2e38] p-8 text-center text-[#7a7a8f]">
               No positions above score {minScore}. Lower the filter to see more.
             </div>
           ) : (
-            filtered.map((job, idx) => (
-              <JobCard
-                key={job.url || idx}
-                job={job}
-                idx={scoredJobs.indexOf(job)}
-                onSelect={onSelectJob}
-              />
-            ))
+            <div className="flex flex-col gap-px bg-[#2e2e38]">
+              {filtered.map((job, idx) => (
+                <JobCard
+                  key={job.url || idx}
+                  job={job}
+                  idx={scoredJobs.indexOf(job)}
+                  onSelect={onSelectJob}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>

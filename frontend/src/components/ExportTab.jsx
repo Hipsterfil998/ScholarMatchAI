@@ -29,8 +29,12 @@ export default function ExportTab({ approved }) {
 
   if (approved.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-[#17171c] border border-[#2e2e38] p-12 text-center  text-[#7a7a8f]">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="py-4">
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-2">Export</p>
+          <h2 className="text-3xl font-bold text-[#e8e8f0]">Your applications</h2>
+        </div>
+        <div className="bg-[#17171c] border border-[#2e2e38] p-12 text-center text-[#7a7a8f]">
           <p className="font-mono text-sm mb-2">No applications approved yet.</p>
           <p className="text-sm mt-1">Go to the Review tab to approve positions.</p>
         </div>
@@ -39,9 +43,13 @@ export default function ExportTab({ approved }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="font-mono text-xl font-semibold text-[#e8e8f0]">Approved applications ({approved.length})</h2>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="py-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-2">Export</p>
+          <h2 className="text-3xl font-bold text-[#e8e8f0]">{approved.length} application{approved.length !== 1 ? 's' : ''} ready</h2>
+          <p className="text-sm text-[#7a7a8f] mt-1">Download a ZIP with cover letters and position details.</p>
+        </div>
         <button
           onClick={handleExport}
           disabled={loading}
@@ -62,7 +70,7 @@ export default function ExportTab({ approved }) {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-px bg-[#2e2e38]">
         {approved.map((entry, i) => {
           const job = entry.job || {}
           const match = job.match || {}
@@ -76,7 +84,7 @@ export default function ExportTab({ approved }) {
               : 'border border-red-900 text-red-500'
 
           return (
-            <div key={i} className="bg-[#17171c] border border-[#2e2e38] p-4 hover:border-[#818cf8]/40 transition-colors">
+            <div key={i} className="bg-[#17171c] p-4 hover:bg-[#1c1c23] transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

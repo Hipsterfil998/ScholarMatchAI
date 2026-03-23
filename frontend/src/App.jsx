@@ -92,7 +92,8 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 pt-20">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 pt-20 relative">
+        <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#818cf8]/[0.04] rounded-full blur-3xl" />
         {tab === 0 && <SearchTab onDone={handleSearchDone} />}
         {tab === 1 && (
           <ResultsTab
