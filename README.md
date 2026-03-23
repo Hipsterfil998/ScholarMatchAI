@@ -2,7 +2,7 @@
   <img src="frontend/public/logo.svg" alt="ScholarMatchAI" width="80" />
 </p>
 
-<h1 align="center">ScholarMatchAI 🎓</h1>
+<h1 align="center">ScholarMatchAI</h1>
 
 <p align="center">
   <strong>AI-powered search and application tool for PhD positions, postdocs, research fellowships, and academic staff roles.</strong>
