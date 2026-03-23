@@ -53,7 +53,9 @@ class AppConfig:
 
     # Generation settings
     max_tokens: int = 4096
-    default_model: str = "llama-3.1-8b-instant"   # only model exposed in the UI
+    default_model: str = field(
+        default_factory=lambda: os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    )
 
     # Scraper behaviour
     scraper_delay: float = 1.5     # polite delay between HTTP requests (seconds)
