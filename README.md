@@ -12,6 +12,7 @@
 
 <p align="center">
   🆓 <strong>100% free</strong> — no subscriptions, no API costs, no sign-up required.<br>
+  🌐 <a href="https://www.scholarmatchai.com">www.scholarmatchai.com</a> &nbsp;·&nbsp;
   📖 <a href="https://hipsterfil998.github.io/ScholarMatchAI">Full documentation</a>
 </p>
 
