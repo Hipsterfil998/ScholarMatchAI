@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { parseCV, searchJobs, scoreJobs } from '../api.js'
+import GraduationCapIcon from './GraduationCapIcon.jsx'
 import { LOCATIONS, POSITION_TYPES } from '../constants.js'
 
 const STEPS = [
@@ -66,7 +67,7 @@ export default function SearchTab({ onDone }) {
       <div className="py-8">
         <p className="text-[10px] font-mono tracking-widest uppercase text-[#818cf8] mb-3">Academic job search</p>
         <h2 className="text-3xl font-bold text-[#e8e8f0] leading-tight">
-          Find your next<br />academic position
+          Find your next academic position
         </h2>
         <p className="mt-3 text-sm text-[#7a7a8f] leading-relaxed max-w-lg">
           Upload your CV, set your search parameters, and let AI find and score matching positions.
@@ -148,10 +149,10 @@ export default function SearchTab({ onDone }) {
                 type="button"
                 onClick={() => setMinScore(val)}
                 title={`${val}`}
-                className="text-xl leading-none transition-transform hover:scale-125 focus:outline-none"
+                className="transition-transform hover:scale-125 focus:outline-none"
                 style={{ opacity: val <= minScore ? 1 : 0.25 }}
               >
-                🎓
+                <GraduationCapIcon className="w-5 h-5 text-[#818cf8]" />
               </button>
             )
           })}

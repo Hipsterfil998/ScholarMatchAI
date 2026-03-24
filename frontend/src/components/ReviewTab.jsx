@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { prepareApplication, regenerateLetter } from '../api.js'
 import { REC_CONFIG } from '../constants.js'
+import GraduationCapIcon from './GraduationCapIcon.jsx'
 
 const SECTION_LABEL = 'text-[10px] font-mono tracking-widest uppercase text-[#7a7a8f]'
 const INPUT_CLS = 'w-full bg-[#0f0f12] border border-[#2e2e38] text-[#e8e8f0] placeholder-[#7a7a8f] focus:border-[#818cf8] focus:outline-none text-sm  px-3 py-2'
@@ -9,7 +10,6 @@ function JobDetails({ job }) {
   const match = job.match || {}
   const score = match.match_score || 0
   const filled = Math.round(score / 10)
-  const bar = '🎓'.repeat(filled) + '◽'.repeat(10 - filled)
   const rec = match.recommendation || ''
   const recCfg = REC_CONFIG[rec] || {}
   const institution = job.institution || job.company || ''
@@ -61,7 +61,14 @@ function JobDetails({ job }) {
           <p className="text-sm font-mono text-[#e8e8f0]">Match score</p>
           <span className="font-mono font-bold text-[#e8e8f0]">{score}/100</span>
         </div>
-        <p className="text-lg">{bar}</p>
+        <div className="flex items-center gap-px">
+          {Array.from({ length: 10 }, (_, i) => (
+            <GraduationCapIcon
+              key={i}
+              className={`w-4 h-4 ${i < filled ? 'text-[#818cf8]' : 'text-[#2e2e38]'}`}
+            />
+          ))}
+        </div>
         {rec && (
           <span className={`inline-flex text-xs px-2.5 py-1 border font-mono ${recCfg.color || ''}`}>
             {recCfg.icon} Recommendation: {recCfg.label}

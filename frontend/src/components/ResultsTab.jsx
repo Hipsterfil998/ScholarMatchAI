@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { REC_CONFIG } from '../constants.js'
+import GraduationCapIcon from './GraduationCapIcon.jsx'
 
 function ProfileCard({ profile }) {
   if (!profile) return null
@@ -57,8 +58,13 @@ function ProfileCard({ profile }) {
 function ScoreBadge({ score }) {
   const filled = Math.round(score / 10)
   return (
-    <span className="text-sm leading-none" title={`${score}/100`}>
-      {'🎓'.repeat(filled)}{'◽'.repeat(10 - filled)}
+    <span className="inline-flex items-center gap-px" title={`${score}/100`}>
+      {Array.from({ length: 10 }, (_, i) => (
+        <GraduationCapIcon
+          key={i}
+          className={`w-3.5 h-3.5 ${i < filled ? 'text-[#818cf8]' : 'text-[#2e2e38]'}`}
+        />
+      ))}
     </span>
   )
 }
