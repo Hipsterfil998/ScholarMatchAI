@@ -198,7 +198,6 @@ export default function SearchTab({ onDone }) {
       {/* Info box */}
       <div className="flex flex-col gap-px bg-[#2e2e38] text-xs font-mono text-[#7a7a8f]">
         <p className="bg-[#17171c] px-4 py-2.5">Your CV is processed in memory and never stored on our servers.</p>
-        <p className="bg-[#17171c] px-4 py-2.5">100% free — powered by Groq free API. No sign-up required.</p>
         <p className="bg-[#17171c] px-4 py-2.5">Searches Euraxess, ScholarshipDb, Nature Careers, mlscientist.com, and jobs.ac.uk.</p>
       </div>
 

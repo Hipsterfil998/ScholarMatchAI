@@ -87,6 +87,12 @@ export default function LandingPage({ onStart }) {
             <span className="font-mono font-semibold text-sm text-[#e8e8f0]">ScholarMatchAI</span>
           </button>
           <div className="flex items-center gap-4">
+            {/* Free badge */}
+            <span className="hidden sm:inline-flex items-center gap-1.5 border border-[#2e2e38] bg-[#17171c] px-2.5 py-1 text-[10px] font-mono text-[#7a7a8f]">
+              <span className="w-1 h-1 bg-emerald-400 rounded-full" />
+              100% free · No sign-up · Powered by{' '}
+              <a href="https://groq.com" target="_blank" rel="noreferrer" className="text-[#818cf8] hover:text-[#a5b4fc] transition-colors">Groq</a>
+            </span>
             {/* Docs icon */}
             <a
               href="https://hipsterfil998.github.io/ScholarMatchAI"
@@ -128,16 +134,6 @@ export default function LandingPage({ onStart }) {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          {/* badge */}
-          <div
-            className="animate-fade-in inline-flex items-center gap-2 border border-[#2e2e38] bg-[#17171c] px-4 py-1.5 mb-8 text-xs font-mono text-[#7a7a8f]"
-            style={{ animationDelay: '0s' }}
-          >
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            100% free · No sign-up · Powered by{' '}
-            <a href="https://groq.com" target="_blank" rel="noreferrer" className="text-[#818cf8] hover:text-[#a5b4fc] transition-colors">Groq</a>
-          </div>
-
           {/* heading */}
           <h1
             className="animate-fade-in-up text-4xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
@@ -161,7 +157,7 @@ export default function LandingPage({ onStart }) {
             className="animate-fade-in-up text-sm text-[#7a7a8f] max-w-xl mx-auto mb-10 leading-relaxed border-l-2 border-[#818cf8]/50 bg-[#17171c] px-4 py-3 text-left"
             style={{ animationDelay: '0.28s' }}
           >
-            ScholarMatchAI is a human-in-the-loop tool. The AI handles the tedious parts — searching, scoring, and drafting — but{' '}
+            ScholarMatchAI is a human-in-the-loop tool. The AI handles the tedious parts like searching, scoring, and drafting, but{' '}
             <span className="text-[#e8e8f0] font-medium">every decision is yours</span>.
             {' '}Read, edit, and approve each application before sending it.
           </p>
