@@ -121,7 +121,7 @@ export default function App() {
 
       <footer className="border-t border-[#2e2e38]">
         <div className="max-w-6xl mx-auto px-4 py-3 text-[10px] font-mono tracking-wide text-[#7a7a8f] flex flex-wrap gap-4">
-          <span>© 2025 ScholarMatchAI</span>
+          <span>© 2026 ScholarMatchAI</span>
           <span>CVs are processed in memory and never stored</span>
           <span>Sources: Euraxess · ScholarshipDb · Nature Careers · mlscientist.com</span>
         </div>
