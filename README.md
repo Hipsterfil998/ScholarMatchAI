@@ -11,9 +11,9 @@
 </p>
 
 <p align="center">
-  🆓 <strong>100% free</strong> — no subscriptions, no API costs, no sign-up required.<br>
-  🌐 <a href="https://www.scholarmatchai.com">www.scholarmatchai.com</a> &nbsp;·&nbsp;
-  📖 <a href="https://hipsterfil998.github.io/ScholarMatchAI">Full documentation</a>
+  <strong>100% free</strong> — no subscriptions, no API costs, no sign-up required.<br>
+  <a href="https://www.scholarmatchai.com">www.scholarmatchai.com</a> &nbsp;·&nbsp;
+  <a href="https://hipsterfil998.github.io/ScholarMatchAI">Full documentation</a>
 </p>
 
 ---
@@ -131,7 +131,7 @@ If you use ScholarMatchAI in your research or project, please cite it as:
 
 ```bibtex
 @software{pellegrino2026scholarmatchai,
-  author  = {Pellegrhe ino, Filippo},
+  author  = {Pellegrino, Filippo},
   title   = {{ScholarMatchAI}: an AI-powered search and application tool for academic positions},
   year    = {2026},
   url     = {https://github.com/Hipsterfil998/ScholarMatchAI},
