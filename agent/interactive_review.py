@@ -323,7 +323,7 @@ class ReviewSession:
     ) -> str:
         try:
             from agent.llm_client import LLMClient
-            from agent.cover_letter import CoverLetterWriter
+            from agent.cv.cover_letter import CoverLetterWriter
 
             profile_text = getattr(self, "_profile_text", "")
             llm = LLMClient(model=self._model)
@@ -333,7 +333,6 @@ class ReviewSession:
             console.print(f"[red]Regeneration failed: {exc}[/red]")
             return original_letter
 
-    def set_profile(self, profile: dict[str, Any], profile_text: str) -> None:
-        """Provide the CV profile for regeneration use."""
-        self._profile = profile
+    def set_profile(self, profile_text: str) -> None:
+        """Provide the CV profile text for regeneration use."""
         self._profile_text = profile_text

@@ -16,12 +16,10 @@ import os
 import tempfile
 import zipfile
 from datetime import datetime
-from typing import Any
-
 import gradio as gr
 
 from agent import JobAgent
-from agent.utils import job_institution
+from agent.utils import job_institution, sanitize_filename
 from config import config
 
 
@@ -312,12 +310,7 @@ def export_zip(approved: list) -> tuple:
                 job = entry.get("job") or {}
                 title = job.get("title", "Unknown")
                 institution = job_institution(job) or "Unknown"
-                safe = (
-                    f"{institution}_{title}"
-                    .replace(" ", "_").replace("/", "-").replace("\\", "-")
-                    .replace(":", "-").replace("*", "").replace("?", "")
-                    .replace('"', "").replace("<", "").replace(">", "").replace("|", "")
-                )[:80]
+                safe = sanitize_filename(f"{institution}_{title}")
                 d = f"applications/{safe}"
                 if entry.get("cover_letter"):
                     zf.writestr(f"{d}/cover_letter_draft.txt", entry["cover_letter"])

@@ -40,3 +40,10 @@ def job_institution(job: dict) -> str:
 def job_description(job: dict, max_chars: int = 3000) -> str:
     """Return the job description truncated to max_chars."""
     return (job.get("description") or "No description provided.")[:max_chars]
+
+
+def sanitize_filename(text: str, maxlen: int = 80) -> str:
+    """Convert arbitrary text to a safe filename/directory component."""
+    text = re.sub(r"[^\w\s\-]", "", text)
+    text = re.sub(r"\s+", "_", text.strip())
+    return text[:maxlen]

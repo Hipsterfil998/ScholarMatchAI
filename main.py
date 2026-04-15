@@ -9,7 +9,6 @@ Usage examples:
 from __future__ import annotations
 
 import json
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -28,6 +27,7 @@ from rich.progress import (
 )
 from rich.table import Table
 
+from agent.utils import sanitize_filename
 from config import config
 
 console = Console()
@@ -193,13 +193,6 @@ def _print_final_summary(
 # File saving helpers
 # ---------------------------------------------------------------------------
 
-def _safe_dirname(text: str, maxlen: int = 40) -> str:
-    """Convert an arbitrary string into a safe directory name component."""
-    text = re.sub(r"[^\w\s\-]", "", text)
-    text = re.sub(r"\s+", "_", text.strip())
-    return text[:maxlen]
-
-
 def _save_application(
     job: dict[str, Any],
     match: dict[str, Any],
@@ -214,8 +207,8 @@ def _save_application(
     """
     from agent.cv.tailor import format_hints_text  # noqa: PLC0415
 
-    institution = _safe_dirname(job.get("institution", job.get("company", "Unknown")))
-    title = _safe_dirname(job.get("title", "Position"))
+    institution = sanitize_filename(job.get("institution", job.get("company", "Unknown")), maxlen=40)
+    title = sanitize_filename(job.get("title", "Position"), maxlen=40)
     dir_name = f"{institution}_{title}"
     app_dir = output_path / "applications" / dir_name
     app_dir.mkdir(parents=True, exist_ok=True)
@@ -446,7 +439,7 @@ def main(
     writer = CoverLetterWriter(llm)
 
     review_session = ReviewSession(llm_model=model)
-    review_session.set_profile(profile, profile_text)
+    review_session.set_profile(profile_text)
 
     approved_list: list[dict[str, Any]] = []
     skipped_count = 0
