@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import shutil
 import tempfile
 import zipfile
 from typing import Any
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+from starlette.background import BackgroundTask
 
-from agent import JobAgent
+from agent import JobAgent, LLMQuotaError
 from agent.utils import job_institution, sanitize_filename
 from config import config
+
+logging.basicConfig(level=logging.INFO)
+_log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -57,6 +63,20 @@ def _check_key() -> None:
         raise HTTPException(400, "No API key configured. Set GROQ_API_KEY as an environment variable.")
 
 
+@app.exception_handler(RuntimeError)
+def _llm_error_handler(request: Request, exc: RuntimeError) -> JSONResponse:
+    """Turn backend LLM failures into a readable `detail` instead of a bare 500.
+
+    Every LLM path raises `RuntimeError` (or `LLMQuotaError`, a subclass) with
+    a message naming the real cause — a decommissioned model, a bad key, a
+    quota. Without this handler FastAPI returned an empty 500 and the UI could
+    only show "Request failed with status code 500".
+    """
+    _log.warning("%s %s failed: %s", request.method, request.url.path, exc)
+    status = 429 if isinstance(exc, LLMQuotaError) else 502
+    return JSONResponse(status_code=status, content={"detail": str(exc)})
+
+
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
@@ -95,8 +115,9 @@ class SearchRequest(BaseModel):
 
 @app.post("/api/search-jobs")
 def search_jobs(req: SearchRequest) -> dict:
-    jobs = _agent().search_jobs(req.field, req.location, req.position_type)
-    return {"jobs": jobs}
+    agent = _agent()
+    jobs = agent.search_jobs(req.field, req.location, req.position_type)
+    return {"jobs": jobs, "failed_sources": agent.searcher.failed_sources}
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +209,14 @@ def export_zip(req: ExportRequest) -> FileResponse:
             })
         zf.writestr("summary.json", json.dumps(summary, indent=2, ensure_ascii=False))
 
-    return FileResponse(zip_path, media_type="application/zip", filename="applications.zip")
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename="applications.zip",
+        # mkdtemp() is not self-cleaning: without this every export left a
+        # copy of the user's applications on the server disk forever.
+        background=BackgroundTask(shutil.rmtree, tmp, ignore_errors=True),
+    )
 
 
 # ---------------------------------------------------------------------------

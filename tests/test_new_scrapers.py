@@ -1,4 +1,4 @@
-"""Tests for ScholarshipDbScraper and NatureCareersScraper — no real HTTP calls."""
+"""Tests for NatureCareersScraper and ScienceCareersScraper — no real HTTP calls."""
 
 from __future__ import annotations
 
@@ -7,39 +7,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from bs4 import BeautifulSoup
 
-from agent.search.scrapers.scholarshipdb import ScholarshipDbScraper
 from agent.search.scrapers.nature_careers import NatureCareersScraper
+from agent.search.scrapers.science_careers import ScienceCareersScraper
 
 
 # ---------------------------------------------------------------------------
 # Minimal HTML fixtures
 # ---------------------------------------------------------------------------
-
-_SCHOLARSHIPDB_HTML = """
-<html><body><ul>
-<li>
-  <div><h4><a href="/jobs-in-Germany/Phd-Machine-Learning-TU-Berlin=abc.html">
-    PhD in Machine Learning</a></h4></div>
-  <div>
-    <a href="/scholarships-at-TU-Berlin">TU Berlin</a> |
-    <span class="text-success">Berlin, Berlin</span> |
-    <a class="text-success" href="/scholarships-in-Germany">Germany</a> |
-    <span class="text-muted">2 days ago</span>
-  </div>
-  <div><p>PhD position in deep learning and computer vision.</p></div>
-</li>
-<li>
-  <div><h4><a href="/jobs-in-France/Postdoc-NLP-CNRS=xyz.html">
-    Postdoc in NLP</a></h4></div>
-  <div>
-    <a href="/scholarships-at-CNRS">CNRS</a> |
-    <a class="text-success" href="/scholarships-in-France">France</a> |
-    <span class="text-muted">5 days ago</span>
-  </div>
-  <div><p>Postdoctoral position in natural language processing.</p></div>
-</li>
-</ul></body></html>
-"""
 
 _NATURE_HTML = """
 <html><body><ul>
@@ -81,85 +55,6 @@ def _mock_fetch(html: str):
     def _fetch(url, **kwargs):
         return BeautifulSoup(html, "lxml")
     return _fetch
-
-
-# ---------------------------------------------------------------------------
-# ScholarshipDbScraper
-# ---------------------------------------------------------------------------
-
-class TestScholarshipDbScraper:
-    def _scrape(self, location, html=_SCHOLARSHIPDB_HTML):
-        s = ScholarshipDbScraper()
-        with patch.object(s, "_fetch", side_effect=_mock_fetch(html)):
-            return s.scrape("machine learning", location, "any")
-
-    def test_parses_title_and_url(self):
-        results = self._scrape("Germany")
-        titles = [r["title"] for r in results]
-        assert any("Machine Learning" in t for t in titles)
-
-    def test_parses_institution(self):
-        results = self._scrape("Germany")
-        assert any(r["institution"] == "TU Berlin" for r in results)
-
-    def test_parses_location_text(self):
-        results = self._scrape("Germany")
-        assert any("Germany" in r["location"] for r in results)
-
-    def test_parses_posted_date(self):
-        results = self._scrape("Germany")
-        assert any(r["posted"] == "2 days ago" for r in results)
-
-    def test_parses_description(self):
-        results = self._scrape("Germany")
-        assert any("deep learning" in r["description"] for r in results)
-
-    def test_mapped_country_builds_slug_url(self):
-        # For countries with a slug, filtering is server-side via URL path.
-        # Verify the correct URL is requested.
-        s = ScholarshipDbScraper()
-        called_urls = []
-        def fake_fetch(url, **kwargs):
-            called_urls.append(url)
-            return BeautifulSoup(_SCHOLARSHIPDB_HTML, "lxml")
-        with patch.object(s, "_fetch", side_effect=fake_fetch):
-            s.scrape("machine learning", "Germany", "any")
-        assert any("scholarships-in-Germany" in u for u in called_urls)
-
-    def test_unmapped_country_client_filters(self):
-        # Malta has no slug → client-side filter applies using country link text.
-        html = _SCHOLARSHIPDB_HTML.replace(
-            '<a class="text-success" href="/scholarships-in-Germany">Germany</a>',
-            '<a class="text-success" href="/scholarships-in-Malta">Malta</a>',
-        ).replace(
-            '<a class="text-success" href="/scholarships-in-France">France</a>',
-            '<a class="text-success" href="/scholarships-in-France">France</a>',
-        )
-        results = self._scrape("Malta", html=html)
-        assert len(results) == 1
-        assert "Malta" in results[0]["location"]
-
-    def test_europe_keeps_both(self):
-        results = self._scrape("Europe")
-        assert len(results) == 2
-
-    def test_worldwide_keeps_all(self):
-        results = self._scrape("")
-        assert len(results) == 2
-
-    def test_url_is_absolute(self):
-        results = self._scrape("")
-        for r in results:
-            assert r["url"].startswith("https://scholarshipdb.net")
-
-    def test_source_name(self):
-        results = self._scrape("")
-        assert all(r["source"] == "scholarshipdb" for r in results)
-
-    def test_type_detected(self):
-        results = self._scrape("Germany")
-        phd_result = next(r for r in results if "PhD" in r["title"])
-        assert phd_result["type"] == "phd"
 
 
 # ---------------------------------------------------------------------------
@@ -244,8 +139,49 @@ class TestNatureCareersScraper:
 # ---------------------------------------------------------------------------
 
 class TestKeywordSearchFlags:
-    def test_scholarshipdb_is_keyword_search(self):
-        assert ScholarshipDbScraper.keyword_search is True
-
     def test_nature_careers_is_keyword_search(self):
         assert NatureCareersScraper.keyword_search is True
+
+    def test_science_careers_is_keyword_search(self):
+        assert ScienceCareersScraper.keyword_search is True
+
+
+# ---------------------------------------------------------------------------
+# ScienceCareersScraper — inherits the Madgex parsing from Nature
+# ---------------------------------------------------------------------------
+
+class TestScienceCareersScraper:
+    def _scrape(self, location, html=_NATURE_HTML):
+        s = ScienceCareersScraper()
+        with patch.object(ScienceCareersScraper, "_fetch", side_effect=_mock_fetch(html)):
+            return s.scrape("machine learning", location, "any")
+
+    def test_parses_cards_with_inherited_logic(self):
+        results = self._scrape("")
+        assert len(results) == 2
+        assert results[0]["title"] == "PhD position in Machine Learning"
+        assert results[0]["institution"] == "TU Berlin"
+
+    def test_uses_its_own_origin_for_relative_urls(self):
+        results = self._scrape("")
+        assert results[0]["url"].startswith("https://jobs.sciencecareers.org/")
+
+    def test_tags_its_own_source_name(self):
+        assert all(r["source"] == "sciencecareers" for r in self._scrape(""))
+
+    def test_hits_its_own_search_endpoint(self):
+        s = ScienceCareersScraper()
+        with patch.object(
+            ScienceCareersScraper, "_fetch", side_effect=_mock_fetch(_NATURE_HTML)
+        ) as fetch:
+            s.scrape("machine learning", "", "any")
+        assert "jobs.sciencecareers.org" in fetch.call_args[0][0]
+
+    def test_strips_whitespace_padded_hrefs(self):
+        """Science Careers pads its hrefs with newlines and tabs."""
+        html = _NATURE_HTML.replace(
+            'href="/naturecareers/job/111/phd-ml/"',
+            'href="\n\t/job/111/phd-ml/\n\n"',
+        )
+        results = self._scrape("", html=html)
+        assert results[0]["url"] == "https://jobs.sciencecareers.org/job/111/phd-ml/"

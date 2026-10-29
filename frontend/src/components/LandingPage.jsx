@@ -19,11 +19,11 @@ const STEPS = [
 ]
 
 const SOURCES = [
-  { icon: '🇪🇺', name: 'Euraxess',       desc: 'EU & worldwide research portal' },
-  { icon: '🌍', name: 'ScholarshipDB',   desc: '28k+ positions worldwide' },
-  { icon: '🔬', name: 'Nature Careers',  desc: 'Multidisciplinary global board' },
-  { icon: '🤖', name: 'mlscientist.com', desc: 'ML & AI academic positions' },
-  { icon: '🇬🇧', name: 'jobs.ac.uk',     desc: 'UK academic jobs' },
+  { icon: '🇪🇺', name: 'Euraxess',        desc: 'EU & worldwide research portal' },
+  { icon: '🧬', name: 'jobRxiv',          desc: 'Global research positions' },
+  { icon: '🔬', name: 'Nature Careers',   desc: 'Multidisciplinary global board' },
+  { icon: '🧪', name: 'Science Careers',  desc: 'AAAS global STEM board' },
+  { icon: '🇬🇧', name: 'jobs.ac.uk',      desc: 'UK academic jobs' },
 ]
 
 const FAQS = [
@@ -37,11 +37,11 @@ const FAQS = [
   },
   {
     q: 'Which job boards are searched?',
-    a: 'Euraxess (EU/worldwide), ScholarshipDB (28k+ positions), Nature Careers (multidisciplinary global), mlscientist.com (ML & AI), and jobs.ac.uk (UK). All five are queried in parallel.',
+    a: 'Euraxess (EU/worldwide), jobRxiv (global research), Nature Careers (multidisciplinary global), Science Careers (AAAS, global STEM), and jobs.ac.uk (UK). Which boards run depends on the location you pick: jobs.ac.uk is queried for UK and worldwide searches, Science Careers for non-European ones.',
   },
   {
     q: 'How long does a search take?',
-    a: 'CV parsing takes ~10 seconds. The job board search runs in parallel and takes 60–90 seconds. AI scoring depends on the number of results, typically another 30–60 seconds.',
+    a: 'CV parsing takes ~10 seconds. The job boards are polled one after another with a polite delay, about 60–90 seconds in total. AI scoring is the slow part: the free Groq tier caps tokens per minute, so budget roughly 1 minute per 8 positions — about 4 minutes for a worldwide search returning 30.',
   },
   {
     q: 'How accurate is the AI match score?',

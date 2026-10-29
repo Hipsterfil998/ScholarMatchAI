@@ -15,11 +15,13 @@ export default function App() {
   const [currentJobIdx, setCurrentJobIdx] = useState(-1)
   const [currentHints, setCurrentHints] = useState(null)
   const [coverLetter, setCoverLetter] = useState('')
+  const [notice, setNotice] = useState('')
 
-  function handleSearchDone({ profile, profileText, scoredJobs }) {
+  function handleSearchDone({ profile, profileText, scoredJobs, notice }) {
     setProfile(profile)
     setProfileText(profileText)
     setScoredJobs(scoredJobs)
+    setNotice(notice || '')
     setCurrentJobIdx(-1)
     setCurrentHints(null)
     setCoverLetter('')
@@ -94,6 +96,18 @@ export default function App() {
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 pt-20 relative">
         <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#818cf8]/[0.04] rounded-full blur-3xl" />
+        {notice && (
+          <div className="mb-4 flex items-start gap-3 border border-amber-900 bg-amber-950/20 p-3 text-sm text-amber-400">
+            <span className="flex-1">{notice}</span>
+            <button
+              onClick={() => setNotice('')}
+              className="font-mono text-xs text-amber-500 hover:text-amber-300"
+              aria-label="Dismiss notice"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {tab === 0 && <SearchTab onDone={handleSearchDone} />}
         {tab === 1 && (
           <ResultsTab
@@ -123,7 +137,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 py-3 text-[10px] font-mono tracking-wide text-[#7a7a8f] flex flex-wrap gap-4">
           <span>© 2026 ScholarMatchAI</span>
           <span>CVs are processed in memory and never stored</span>
-          <span>Sources: Euraxess · ScholarshipDb · Nature Careers · mlscientist.com</span>
+          <span>Sources: Euraxess · jobRxiv · Nature Careers · Science Careers · jobs.ac.uk</span>
         </div>
       </footer>
     </div>

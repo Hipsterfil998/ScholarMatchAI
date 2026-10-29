@@ -11,6 +11,8 @@ from typing import ClassVar
 import requests
 from bs4 import BeautifulSoup
 
+from config import config
+
 
 _MONTH_MAP = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
@@ -28,7 +30,37 @@ _HEADERS = {
     )
 }
 
-_DELAY = 1.5  # polite delay between HTTP requests (seconds)
+_DELAY = config.scraper_delay      # polite delay between HTTP requests (seconds)
+_MAX_RESULTS = config.max_results_per_source  # cap on listings taken per board
+
+# ISO 3166-1 alpha-2 → normalised country name (lowercase, matches location strings)
+_CC_COUNTRY: dict[str, str] = {
+    "AT": "austria", "BE": "belgium", "BG": "bulgaria", "HR": "croatia",
+    "CY": "cyprus", "CZ": "czech republic", "DK": "denmark", "EE": "estonia",
+    "FI": "finland", "FR": "france", "DE": "germany", "GR": "greece",
+    "HU": "hungary", "IE": "ireland", "IT": "italy", "LV": "latvia",
+    "LT": "lithuania", "LU": "luxembourg", "MT": "malta", "NL": "netherlands",
+    "PL": "poland", "PT": "portugal", "RO": "romania", "SK": "slovakia",
+    "SI": "slovenia", "ES": "spain", "SE": "sweden", "GB": "united kingdom",
+    "IS": "iceland", "NO": "norway", "CH": "switzerland", "TR": "turkey",
+    "RS": "serbia", "US": "united states", "CA": "canada", "AU": "australia",
+    "JP": "japan", "KR": "south korea", "CN": "china", "SG": "singapore",
+    "IN": "india", "NZ": "new zealand", "ZA": "south africa", "IL": "israel",
+    "BR": "brazil",
+}
+
+_UK_ALIASES: frozenset[str] = frozenset({"uk", "united kingdom", "great britain", "england", "scotland", "wales"})
+
+_EUROPEAN_CC: frozenset[str] = frozenset({
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
+    "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK",
+    "SI", "ES", "SE", "GB", "IS", "NO", "CH", "TR", "RS",
+})
+
+_EUROPEAN_COUNTRIES: frozenset[str] = frozenset(
+    _CC_COUNTRY[cc] for cc in _EUROPEAN_CC if cc in _CC_COUNTRY
+)
+
 
 _TYPE_KEYWORDS: dict[str, list[str]] = {
     "predoctoral": [
@@ -89,6 +121,16 @@ class BaseScraper(ABC):
         except Exception:
             return None
 
+    def _fetch_json(self, url: str, timeout: int = 15):
+        """GET ``url`` and return the decoded JSON body, or ``None`` on failure."""
+        try:
+            resp = requests.get(url, headers=_HEADERS, timeout=timeout)
+            if resp.status_code != 200:
+                return None
+            return resp.json()
+        except Exception:
+            return None
+
     def _sleep(self) -> None:
         """Polite delay between requests."""
         time.sleep(_DELAY)
@@ -103,6 +145,23 @@ class BaseScraper(ABC):
         return "other"
 
     @staticmethod
+    def _matches_type(title: str, description: str, position_type: str) -> bool:
+        """Return True if the listing plausibly matches ``position_type``.
+
+        ``_detect_type`` must pick a single winning label, so a PhD studentship
+        described as a "research scholarship" gets labelled ``fellowship`` and
+        would be dropped by an equality filter.  This checks the requested
+        type's keywords directly, so a listing can match more than one type.
+        """
+        if position_type in ("", "any"):
+            return True
+        keywords = _TYPE_KEYWORDS.get(position_type)
+        if not keywords:
+            return True
+        combined = (title + " " + description).lower()
+        return any(kw in combined for kw in keywords)
+
+    @staticmethod
     def _extract_email(text: str) -> str | None:
         """Extract the first email address found in ``text``, or ``None``."""
         m = re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", text)
@@ -112,8 +171,8 @@ class BaseScraper(ABC):
     def _parse_date(text: str | None) -> datetime | None:
         """Parse a free-form date string into a ``datetime``, or ``None`` on failure.
 
-        Handles formats produced by Euraxess, mlscientist, jobs.ac.uk, and
-        scholarshipdb (relative dates):
+        Handles formats produced by Euraxess, jobs.ac.uk, jobRxiv, and the
+        Madgex boards (relative dates):
         - ISO: ``2025-03-15`` or ``2025-03-15T10:00:00``
         - ``15 March 2025`` / ``15 Mar 2025``
         - ``March 15, 2025`` / ``Mar 15, 2025``

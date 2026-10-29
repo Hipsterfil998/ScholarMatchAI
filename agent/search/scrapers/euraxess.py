@@ -6,7 +6,7 @@ import re
 from typing import ClassVar
 from urllib.parse import quote_plus
 
-from agent.search.scrapers.base import BaseScraper
+from agent.search.scrapers.base import BaseScraper, _MAX_RESULTS
 
 
 class EuraxessScraper(BaseScraper):
@@ -42,7 +42,7 @@ class EuraxessScraper(BaseScraper):
             return []
 
         listings: list[dict] = []
-        for card in soup.select("article.ecl-content-item")[:20]:
+        for card in soup.select("article.ecl-content-item")[:_MAX_RESULTS]:
             title_el = card.select_one(
                 "h3.ecl-content-block__title a, h2.ecl-content-block__title a"
             )

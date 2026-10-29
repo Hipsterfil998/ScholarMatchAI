@@ -82,6 +82,12 @@ class LLMClient:
             self._groq_client = OpenAI(
                 base_url=config.groq_base_url,
                 api_key=api_key,
+                # Groq's free tier is tokens-per-minute bound, so a batch of
+                # jobs inevitably hits 429 part-way through. The SDK retries
+                # with backoff and honours Retry-After; its default of 2 tries
+                # is far too few to ride out a full TPM window.
+                max_retries=config.llm_max_retries,
+                timeout=config.llm_timeout,
             )
         return self._groq_client
 

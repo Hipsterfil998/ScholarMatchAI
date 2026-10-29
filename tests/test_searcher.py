@@ -3,12 +3,12 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 import pytest
-from agent.search.searcher import JobSearcher
+from agent.search.searcher import JobSearcher, _STALE_DAYS
 
 
 TODAY = datetime.now()
 YESTERDAY = TODAY - timedelta(days=1)
-LAST_YEAR = TODAY.replace(year=TODAY.year - 1)
+LONG_AGO = TODAY - timedelta(days=_STALE_DAYS + 1)
 RECENT = TODAY - timedelta(days=10)
 OLDER = TODAY - timedelta(days=60)
 CLOSING_SOON = TODAY + timedelta(days=7)
@@ -20,9 +20,15 @@ def _fmt(dt: datetime) -> str:
 
 
 class TestIsStale:
-    def test_old_posting_year_filtered(self):
-        job = {"posted": _fmt(LAST_YEAR), "deadline": None}
+    def test_posting_older_than_stale_days_filtered(self):
+        job = {"posted": _fmt(LONG_AGO), "deadline": None}
         assert JobSearcher._is_stale(job, TODAY)
+
+    def test_december_posting_kept_in_january(self):
+        """Regression: the year-based check dropped every open December post
+        the moment January started."""
+        job = {"posted": "20 December 2025", "deadline": "31 January 2026"}
+        assert not JobSearcher._is_stale(job, datetime(2026, 1, 5))
 
     def test_expired_deadline_filtered(self):
         job = {"posted": None, "deadline": _fmt(YESTERDAY)}
@@ -41,8 +47,8 @@ class TestIsStale:
         assert not JobSearcher._is_stale(job, TODAY)
 
     def test_old_posting_future_deadline_filtered_by_posting(self):
-        # posted last year → stale even if deadline is future
-        job = {"posted": _fmt(LAST_YEAR), "deadline": _fmt(FAR_DEADLINE)}
+        # posted beyond the staleness window → stale even if deadline is future
+        job = {"posted": _fmt(LONG_AGO), "deadline": _fmt(FAR_DEADLINE)}
         assert JobSearcher._is_stale(job, TODAY)
 
 
@@ -174,9 +180,9 @@ class TestKeywordSearchFlag:
             "title": "Research Associate",
             "description": "Join our multidisciplinary team.",
             "url": "https://example.com/job/2",
-            "posted": None, "deadline": None, "type": "other", "source": "mlscientist",
+            "posted": None, "deadline": None, "type": "other", "source": "otherboard",
         }
-        scraper = self._make_scraper("mlscientist", keyword_search=False, listings=[listing])
+        scraper = self._make_scraper("otherboard", keyword_search=False, listings=[listing])
         results = self._run([scraper])
         assert len(results) == 0
 
@@ -187,9 +193,9 @@ class TestKeywordSearchFlag:
             "title": "PhD in Biomaterials",
             "description": "Research on biomaterials.",
             "url": "https://example.com/job/3",
-            "posted": None, "deadline": None, "type": "phd", "source": "mlscientist",
+            "posted": None, "deadline": None, "type": "phd", "source": "otherboard",
         }
-        scraper = self._make_scraper("mlscientist", keyword_search=False, listings=[listing])
+        scraper = self._make_scraper("otherboard", keyword_search=False, listings=[listing])
         results = self._run([scraper])
         assert len(results) == 1
 
@@ -205,10 +211,10 @@ class TestKeywordSearchFlag:
             "title": "Machine Learning Researcher",
             "description": "Deep learning and NLP.",
             "url": "https://example.com/job/5",
-            "posted": None, "deadline": None, "type": "research_staff", "source": "mlscientist",
+            "posted": None, "deadline": None, "type": "research_staff", "source": "otherboard",
         }
         kw_scraper = self._make_scraper("euraxess", keyword_search=True, listings=[kw_listing])
-        non_kw_scraper = self._make_scraper("mlscientist", keyword_search=False, listings=[non_kw_off_topic])
+        non_kw_scraper = self._make_scraper("otherboard", keyword_search=False, listings=[non_kw_off_topic])
         results = self._run([kw_scraper, non_kw_scraper])
         urls = [r["url"] for r in results]
         assert "https://example.com/job/4" in urls

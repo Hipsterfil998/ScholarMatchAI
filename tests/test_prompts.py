@@ -57,3 +57,35 @@ class TestPromptsPresent:
         )
         assert "test profile" in formatted
         assert "PhD in ML" in formatted
+
+
+class TestJobMatcherPromptBudget:
+    """The matcher prompt is sent once per listing, so its fixed size is
+    multiplied by the result count. On Groq's free tier the pipeline is bound
+    by tokens per minute: when this prompt was 2833 chars, scoring 31 listings
+    exhausted the budget and 20 of them came back unscored."""
+
+    BUDGET_CHARS = 1600
+
+    def test_fixed_overhead_stays_within_budget(self):
+        overhead = len(prompts.JOB_MATCHER_SYSTEM) + len(prompts.JOB_MATCHER_PROMPT)
+        assert overhead <= self.BUDGET_CHARS, (
+            f"matcher prompt grew to {overhead} chars (budget {self.BUDGET_CHARS}); "
+            "every extra char is paid once per job listing"
+        )
+
+    def test_still_states_the_output_contract(self):
+        p = prompts.JOB_MATCHER_PROMPT
+        for key in ("match_score", "recommendation", "matching_areas",
+                    "missing_requirements", "why_good_fit", "concerns"):
+            assert key in p
+
+    def test_still_states_the_eligibility_rule(self):
+        p = prompts.JOB_MATCHER_PROMPT.lower()
+        assert "postdoc" in p and "phd" in p
+        assert "30" in p and "65" in p
+
+    def test_still_asks_for_semantic_matching(self):
+        p = prompts.JOB_MATCHER_PROMPT.lower()
+        assert "keyword" in p
+        assert "natural language processing" in p

@@ -5,7 +5,7 @@ import { LOCATIONS, POSITION_TYPES } from '../constants.js'
 
 const STEPS = [
   { key: 'parse',  label: 'Parsing CV…',                pct: 15 },
-  { key: 'search', label: 'Searching job boards (~60s)…', pct: 50 },
+  { key: 'search', label: 'Searching job boards (~60–90s)…', pct: 50 },
   { key: 'score',  label: 'Scoring positions with AI…',  pct: 85 },
   { key: 'done',   label: 'Done!',                       pct: 100 },
 ]
@@ -40,17 +40,40 @@ export default function SearchTab({ onDone }) {
     try {
       const { profile, profile_text } = await parseCV(cvFile)
       setStepIdx(1)
-      const { jobs } = await searchJobs({ field: field.trim(), location, positionType })
+      const { jobs, failed_sources } = await searchJobs({ field: field.trim(), location, positionType })
+      const skipped = failed_sources?.length
+        ? `Some job boards did not respond and were skipped: ${failed_sources.join(', ')}.`
+        : ''
       if (!jobs || jobs.length === 0) {
-        setError('No positions found. Try a broader field or location.')
+        setError(
+          skipped
+            ? `No positions found. ${skipped}`
+            : 'No positions found. Try a broader field or location.'
+        )
         setLoading(false)
         return
       }
       setStepIdx(2)
       const { scored_jobs } = await scoreJobs({ jobs, profileText: profile_text })
       setStepIdx(3)
-      const filtered = scored_jobs.filter(j => (j.match?.match_score || 0) >= minScore)
-      onDone({ profile, profileText: profile_text, scoredJobs: filtered })
+      // A position the AI could not score is not a 0% match — say so instead
+      // of letting the minimum-score filter drop it without a trace.
+      const unscored = scored_jobs.filter(j => j.match?.scoring_failed).length
+      const notices = [
+        skipped,
+        unscored
+          ? `${unscored} of ${scored_jobs.length} positions could not be scored (the free Groq tier ran out of tokens) and are not shown. Re-running the search in a minute usually scores them.`
+          : '',
+      ].filter(Boolean)
+      const filtered = scored_jobs.filter(
+        j => !j.match?.scoring_failed && (j.match?.match_score || 0) >= minScore
+      )
+      onDone({
+        profile,
+        profileText: profile_text,
+        scoredJobs: filtered,
+        notice: notices.join(' '),
+      })
     } catch (err) {
       setError('Error: ' + (err?.response?.data?.detail || err.message || 'Unknown error'))
     } finally {
@@ -183,7 +206,7 @@ export default function SearchTab({ onDone }) {
               style={{ width: `${currentStep.pct}%` }}
             />
           </div>
-          <p className="text-[10px] font-mono text-[#7a7a8f]">The job board search can take up to 90 seconds — please wait.</p>
+          <p className="text-[10px] font-mono text-[#7a7a8f]">Searching takes up to 90 seconds; scoring runs about 1 minute per 8 positions. Please wait.</p>
         </div>
       )}
 

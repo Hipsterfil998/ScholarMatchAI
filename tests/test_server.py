@@ -31,6 +31,7 @@ def _mock_agent(**overrides):
         {"name": "Alice", "research_interests": ["NLP"]},
         "Alice, NLP researcher.",
     )
+    agent.searcher.failed_sources = []
     agent.search_jobs.return_value = [
         {"title": "PhD in ML", "institution": "MIT", "location": "USA",
          "type": "phd", "url": "https://example.com/1", "description": "ML research",
@@ -102,6 +103,17 @@ class TestSearchJobs:
         self._post({"field": "ML"}, agent=mock)
         args = mock.search_jobs.call_args[0]
         assert args[1] == "Europe"
+
+    def test_reports_no_failed_sources_on_a_clean_search(self):
+        resp = self._post({"field": "ML"})
+        assert resp.json()["failed_sources"] == []
+
+    def test_reports_failed_sources(self):
+        """A dead job board must be named in the response, not swallowed."""
+        mock = _mock_agent()
+        mock.searcher.failed_sources = ["euraxess", "jobrxiv"]
+        resp = self._post({"field": "ML"}, agent=mock)
+        assert resp.json()["failed_sources"] == ["euraxess", "jobrxiv"]
 
 
 # ---------------------------------------------------------------------------
@@ -313,6 +325,18 @@ class TestExportZip:
         zf = zipfile.ZipFile(io.BytesIO(resp.content))
         assert any("position_details.json" in n for n in zf.namelist())
 
+    def test_temp_dir_removed_after_download(self):
+        """mkdtemp() is not self-cleaning: every export used to leak a copy of
+        the user's applications onto the server disk."""
+        import glob
+        import tempfile
+
+        before = set(glob.glob(os.path.join(tempfile.gettempdir(), "*", "applications.zip")))
+        resp = client.post("/api/export", json={"approved": _APPROVED})
+        assert resp.status_code == 200
+        after = set(glob.glob(os.path.join(tempfile.gettempdir(), "*", "applications.zip")))
+        assert after == before
+
     def test_multiple_entries_in_zip(self):
         approved = [
             {"job": {"title": f"Job {i}", "institution": f"Inst {i}",
@@ -324,6 +348,45 @@ class TestExportZip:
         zf = zipfile.ZipFile(io.BytesIO(resp.content))
         summary = json.loads(zf.read("summary.json"))
         assert len(summary) == 3
+
+
+# ---------------------------------------------------------------------------
+# LLM backend failures
+# ---------------------------------------------------------------------------
+
+class TestLLMErrorHandling:
+    """A backend LLM failure must arrive as a readable `detail`, not a bare 500."""
+
+    def _post_parse_cv(self, exc):
+        mock = _mock_agent()
+        mock.parse_cv.side_effect = exc
+        with patch("server._agent", return_value=mock):
+            return client.post(
+                "/api/parse-cv",
+                files={"cv": ("cv.txt", b"content", "text/plain")},
+            )
+
+    def test_runtime_error_becomes_502_with_detail(self):
+        resp = self._post_parse_cv(RuntimeError("Groq inference failed: model_not_found"))
+        assert resp.status_code == 502
+        assert "model_not_found" in resp.json()["detail"]
+
+    def test_quota_error_becomes_429_with_detail(self):
+        from agent import LLMQuotaError
+        resp = self._post_parse_cv(LLMQuotaError("Quota exceeded"))
+        assert resp.status_code == 429
+        assert "Quota exceeded" in resp.json()["detail"]
+
+    def test_scoring_failure_is_also_reported(self):
+        mock = _mock_agent()
+        mock.score_jobs.side_effect = RuntimeError("Groq inference failed: 401")
+        with patch("server._agent", return_value=mock):
+            resp = client.post(
+                "/api/score-jobs",
+                json={"jobs": [{"title": "x"}], "profile_text": "p"},
+            )
+        assert resp.status_code == 502
+        assert "401" in resp.json()["detail"]
 
 
 # ---------------------------------------------------------------------------

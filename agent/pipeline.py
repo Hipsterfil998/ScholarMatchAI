@@ -51,7 +51,11 @@ class JobAgent:
         location: str = "Europe",
         position_type: str = "any",
     ) -> list[dict[str, Any]]:
-        """Search all free job boards and return deduplicated listings."""
+        """Search all free job boards and return deduplicated listings.
+
+        After the call, ``self.searcher.failed_sources`` lists the boards that
+        raised, so the caller can tell the user which sources were skipped.
+        """
         return self.searcher.search(field, location, position_type)
 
     def score_jobs(

@@ -483,7 +483,7 @@
           <div class="step-num"></div>
           <div class="step-body">
             <strong>Search job boards</strong>
-            <p>ScholarMatchAI queries Euraxess, mlscientist.com, jobs.ac.uk, scholarshipdb.net, and nature.com/careers in parallel, then deduplicates and filters by recency (expired listings discarded).</p>
+            <p>ScholarMatchAI queries Euraxess, jobRxiv, nature.com/careers, jobs.ac.uk and Science Careers, then deduplicates and filters by recency (expired listings discarded). Boards are polled one after another with a polite delay; jobs.ac.uk runs for UK and worldwide searches, Science Careers for non-European ones. A board that fails is skipped and named in the response.</p>
           </div>
         </div>
         <div class="step">
@@ -537,8 +537,8 @@ npm install</code></pre>
 LLM_BACKEND=groq
 GROQ_API_KEY=gsk_your_key_here
 
-<span class="cm"># Optional: override model (default: llama-3.3-70b-versatile)</span>
-GROQ_MODEL=llama-3.3-70b-versatile</code></pre>
+<span class="cm"># Optional: override model (default: openai/gpt-oss-120b)</span>
+GROQ_MODEL=openai/gpt-oss-120b</code></pre>
 
     <h2>Run</h2>
     <p>Start the backend (terminal 1):</p>
@@ -586,7 +586,7 @@ GROQ_MODEL=llama-3.3-70b-versatile</code></pre>
           <div class="step-num"></div>
           <div class="step-body">
             <strong>Click "Parse CV & Search Positions"</strong>
-            <p>Wait ~2–3 minutes. The agent scrapes all sources, parses your CV, and scores every match.</p>
+            <p>Wait ~2–3 minutes — up to ~5 for a worldwide search returning 30+ positions, since the free Groq tier limits tokens per minute. The agent scrapes all sources, parses your CV, and scores every match.</p>
           </div>
         </div>
         <div class="step">
@@ -635,7 +635,7 @@ GROQ_MODEL=llama-3.3-70b-versatile</code></pre>
         <tr><td><strong>Min. match score</strong></td><td>Clickable 🎓 rating (10–100). Filters the Results view — all positions still downloadable.</td></tr>
       </table>
     </div>
-    <p>Click <strong>Parse CV &amp; Search Positions</strong>. A progress bar tracks the three steps: CV parsing → job board search (~60s) → AI scoring.</p>
+    <p>Click <strong>Parse CV &amp; Search Positions</strong>. A progress bar tracks the three steps: CV parsing → job board search (~60&ndash;90s) → AI scoring (~2&ndash;4 min for 30 positions).</p>
 
     <h2>Tab 2 — Results</h2>
     <p>All scored positions shown as cards, sorted by match score. Each card shows:</p>
@@ -708,7 +708,7 @@ GROQ_MODEL=llama-3.3-70b-versatile</code></pre>
     <pre><code><span class="kw">from</span> agent <span class="kw">import</span> JobAgent
 
 agent = JobAgent(
-    model=<span class="st">"llama-3.3-70b-versatile"</span>,
+    model=<span class="st">"openai/gpt-oss-120b"</span>,
     backend=<span class="st">"groq"</span>,
     api_key=<span class="st">"gsk_..."</span>,
 )
@@ -733,9 +733,9 @@ scored = agent.score_jobs(jobs, profile_text)
         <p>EU/worldwide research portal. Country-filtered via API parameters.</p>
       </div>
       <div class="card-sm">
-        <span class="icon-big">🤖</span>
-        <h4>mlscientist.com</h4>
-        <p>ML &amp; AI academic positions. 14 country categories supported.</p>
+        <span class="icon-big">🧬</span>
+        <h4>jobRxiv</h4>
+        <p>Global research board. Read through its public REST API, so position type and country come from the board's own taxonomy rather than keyword guessing.</p>
       </div>
       <div class="card-sm">
         <span class="icon-big">🇬🇧</span>
@@ -743,9 +743,9 @@ scored = agent.score_jobs(jobs, profile_text)
         <p>UK academic jobs. Queried only when UK or Worldwide is selected.</p>
       </div>
       <div class="card-sm">
-        <span class="icon-big">🌍</span>
-        <h4>scholarshipdb.net</h4>
-        <p>Worldwide aggregator with 28k+ positions across all disciplines. Country-filtered via URL path.</p>
+        <span class="icon-big">🧪</span>
+        <h4>jobs.sciencecareers.org</h4>
+        <p>AAAS global STEM board. Same platform as nature.com/careers, so it reuses that parser. US-dominated, so it is queried only for non-European searches.</p>
       </div>
       <div class="card-sm">
         <span class="icon-big">🔬</span>
@@ -757,7 +757,7 @@ scored = agent.score_jobs(jobs, profile_text)
     <h2>Freshness filtering</h2>
     <p>After scraping, ScholarMatchAI automatically removes:</p>
     <ul>
-      <li>Postings with a <strong>posting date in a previous year</strong></li>
+      <li>Postings <strong>older than <code>stale_days</code></strong> (365 by default)</li>
       <li>Postings with a <strong>deadline already passed</strong></li>
       <li>Jobs with no date info are kept (benefit of the doubt)</li>
     </ul>
@@ -806,7 +806,7 @@ scored = agent.score_jobs(jobs, profile_text)
     <h2>LLM settings</h2>
     <table>
       <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-      <tr><td><code>default_model</code></td><td><code>llama-3.3-70b-versatile</code></td><td>Groq model (overridable via <code>GROQ_MODEL</code> env var)</td></tr>
+      <tr><td><code>default_model</code></td><td><code>openai/gpt-oss-120b</code></td><td>Groq model (overridable via <code>GROQ_MODEL</code> env var)</td></tr>
       <tr><td><code>max_tokens</code></td><td><code>4096</code></td><td>Max tokens per LLM response</td></tr>
       <tr><td><code>llm_backend</code></td><td><code>groq</code></td><td>Backend: <code>groq</code> | <code>ollama</code></td></tr>
     </table>
@@ -823,6 +823,7 @@ scored = agent.score_jobs(jobs, profile_text)
       <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
       <tr><td><code>recent_days</code></td><td><code>30</code></td><td>Days since posting → 🟢 Recent</td></tr>
       <tr><td><code>deadline_warn_days</code></td><td><code>14</code></td><td>Days until deadline → 🔴 Closing soon</td></tr>
+      <tr><td><code>stale_days</code></td><td><code>365</code></td><td>Days since posting after which a listing is dropped</td></tr>
     </table>
 
     <h2>Environment variables</h2>
@@ -830,7 +831,7 @@ scored = agent.score_jobs(jobs, profile_text)
       <tr><th>Variable</th><th>Description</th></tr>
       <tr><td><code>GROQ_API_KEY</code></td><td>Groq API key — required</td></tr>
       <tr><td><code>LLM_BACKEND</code></td><td>Override backend: <code>groq</code> | <code>ollama</code></td></tr>
-      <tr><td><code>GROQ_MODEL</code></td><td>Override model name (default: <code>llama-3.3-70b-versatile</code>)</td></tr>
+      <tr><td><code>GROQ_MODEL</code></td><td>Override model name (default: <code>openai/gpt-oss-120b</code>)</td></tr>
     </table>
   </section>
 
@@ -918,10 +919,10 @@ The letter should be <span class="st">250-350 words (2-3 paragraphs)</span>.</co
         ├── <span class="file">searcher.py</span>     <span class="note"># JobSearcher (orchestrates scrapers)</span>
         └── <span class="dir">scrapers/</span>
             ├── <span class="file">euraxess.py</span>
-            ├── <span class="file">mlscientist.py</span>
+            ├── <span class="file">jobrxiv.py</span>
             ├── <span class="file">jobs_ac_uk.py</span>
-            ├── <span class="file">scholarshipdb.py</span>
-            └── <span class="file">nature_careers.py</span>
+            ├── <span class="file">nature_careers.py</span>
+            └── <span class="file">science_careers.py</span>
     </div>
 
     <h2>Pipeline flow</h2>

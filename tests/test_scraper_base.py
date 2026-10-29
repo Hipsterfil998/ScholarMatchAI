@@ -51,7 +51,7 @@ class TestParseDate:
     def test_case_insensitive_prefix(self):
         assert self._p("POSTED ON: 10 January 2026") == datetime(2026, 1, 10)
 
-    # -- relative dates (scholarshipdb / nature.com format) ------------------
+    # -- relative dates (jobRxiv / nature.com format) --------------------------
 
     def test_relative_hours_ago(self):
         result = self._p("about 3 hours ago")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from urllib.parse import quote_plus
 
-from agent.search.scrapers.base import BaseScraper
+from agent.search.scrapers.base import BaseScraper, _MAX_RESULTS
 
 
 class JobsAcUkScraper(BaseScraper):
@@ -17,7 +17,7 @@ class JobsAcUkScraper(BaseScraper):
         params = [
             f"keywords={quote_plus(keywords)}",
             "sortOrder=2",
-            "pageSize=25",
+            f"pageSize={_MAX_RESULTS}",
         ]
 
         if position_type == "phd":
@@ -38,7 +38,7 @@ class JobsAcUkScraper(BaseScraper):
             return []
 
         listings: list[dict] = []
-        for card in soup.select("div[data-advert-id], .j-search-result__result")[:25]:
+        for card in soup.select("div[data-advert-id], .j-search-result__result")[:_MAX_RESULTS]:
             title_el = card.select_one(".j-search-result__text > a")
             if not title_el:
                 continue

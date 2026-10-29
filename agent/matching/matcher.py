@@ -12,6 +12,7 @@ from agent.utils import job_description, job_institution
 
 
 class MatchResult(TypedDict, total=False):
+    scoring_failed: bool              # True when the LLM call failed, not a real 0
     match_score: int
     recommendation: str               # "apply" | "consider" | "skip"
     matching_areas: list[str]
@@ -46,6 +47,12 @@ def _phd_status(profile_text: str) -> str:
     return "none"
 
 
+# Marks a MatchResult as "scoring failed" rather than "scored 0". The UI
+# filters on match_score, so without this flag a rate-limited position was
+# indistinguishable from a genuine 0% match and disappeared silently.
+SCORING_FAILED = "scoring_failed"
+
+
 def _fallback(reason: str) -> MatchResult:
     return {
         "match_score": 0,
@@ -54,6 +61,7 @@ def _fallback(reason: str) -> MatchResult:
         "missing_requirements": [],
         "why_good_fit": "",
         "concerns": f"Could not score position: {reason[:200]}",
+        SCORING_FAILED: True,
     }
 
 
@@ -112,9 +120,14 @@ class JobMatcher(BaseLLMService):
         self,
         jobs: list[dict[str, Any]],
         profile_text: str,
-        max_workers: int = 8,
+        max_workers: int = 4,
     ) -> list[dict[str, Any]]:
-        """Score all jobs in parallel and return them sorted by score (highest first)."""
+        """Score all jobs in parallel and return them sorted by score (highest first).
+
+        Throughput is capped by the backend's tokens-per-minute budget, not by
+        concurrency, so a high worker count buys nothing and just turns the
+        rate limit into a retry storm.
+        """
         scored: list[dict[str, Any]] = [{}] * len(jobs)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {

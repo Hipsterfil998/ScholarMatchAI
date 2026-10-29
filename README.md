@@ -37,7 +37,7 @@ Upload your CV, set a research field and country, and ScholarMatchAI will:
 3. Select a country or region from the dropdown (40+ options)
 4. Choose the position type (`PhD`, `postdoc`, `fellowship`, `predoctoral`, `research staff`)
 5. Set a minimum match score (used as a recommendation threshold — all positions are reviewable)
-6. Click **Parse CV & Search Positions** and wait (~2–3 minutes)
+6. Click **Parse CV & Search Positions** and wait (~2–3 minutes; up to ~5 for a worldwide search with many results — the free Groq tier is rate-limited by tokens per minute)
 7. In the **Results** tab, browse all scored positions
 8. In the **Review** tab, load any position, read CV tailoring hints, and edit the cover letter
 9. Click **Approve & Save** for positions you want to apply to
@@ -58,6 +58,7 @@ Create a `.env` file:
 ```env
 LLM_BACKEND=groq
 GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 Get a free Groq API key at [console.groq.com/keys](https://console.groq.com/keys).
@@ -100,7 +101,7 @@ ScholarMatchAI/
     ├── prompts/                # LLM prompts — one file per service
     ├── cv/                     # CV parsing, tailoring, cover letter
     ├── matching/               # LLM-based scoring
-    └── search/                 # Scrapers (Euraxess, mlscientist, jobs.ac.uk, …)
+    └── search/                 # Scrapers (Euraxess, jobRxiv, jobs.ac.uk, …)
 ```
 
 ---
@@ -108,7 +109,16 @@ ScholarMatchAI/
 ## Model
 
 Powered by [Groq](https://groq.com) free API — fast inference, no subscription required.
-Uses `llama-3.3-70b-versatile` by default. For local use, set `LLM_BACKEND=ollama` in `.env`.
+Uses `openai/gpt-oss-120b` by default. For local use, set `LLM_BACKEND=ollama` in `.env`.
+
+Groq retires models from its free tier periodically. If a search fails with
+`model_not_found`, check which models your key can reach and set `GROQ_MODEL`
+accordingly:
+
+```bash
+curl -s https://api.groq.com/openai/v1/models \
+  -H "Authorization: Bearer $GROQ_API_KEY" | python3 -m json.tool
+```
 
 ---
 
@@ -116,10 +126,10 @@ Uses `llama-3.3-70b-versatile` by default. For local use, set `LLM_BACKEND=ollam
 
 Job data sourced from:
 - [Euraxess](https://euraxess.ec.europa.eu) — European Commission portal for research careers
-- [mlscientist.com](https://mlscientist.com) — ML & AI academic job board
+- [jobRxiv](https://jobrxiv.org) — Global research job board, read through its public REST API
 - [jobs.ac.uk](https://www.jobs.ac.uk) — UK academic jobs portal
-- [scholarshipdb.net](https://scholarshipdb.net) — Worldwide academic jobs and scholarships aggregator
 - [nature.com/careers](https://www.nature.com/naturecareers) — Multidisciplinary global research job board
+- [Science Careers](https://jobs.sciencecareers.org) — AAAS global STEM job board
 
 LLM inference powered by [Groq](https://groq.com) free API.
 

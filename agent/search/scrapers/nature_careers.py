@@ -3,46 +3,36 @@
 from __future__ import annotations
 
 import re
+from typing import ClassVar
 from urllib.parse import quote_plus
 
-from agent.search.scrapers.base import BaseScraper
-
-
-# ISO 3166-1 alpha-2 → normalised country name (lowercase, matches location strings)
-_CC_COUNTRY: dict[str, str] = {
-    "AT": "austria", "BE": "belgium", "BG": "bulgaria", "HR": "croatia",
-    "CY": "cyprus", "CZ": "czech republic", "DK": "denmark", "EE": "estonia",
-    "FI": "finland", "FR": "france", "DE": "germany", "GR": "greece",
-    "HU": "hungary", "IE": "ireland", "IT": "italy", "LV": "latvia",
-    "LT": "lithuania", "LU": "luxembourg", "MT": "malta", "NL": "netherlands",
-    "PL": "poland", "PT": "portugal", "RO": "romania", "SK": "slovakia",
-    "SI": "slovenia", "ES": "spain", "SE": "sweden", "GB": "united kingdom",
-    "IS": "iceland", "NO": "norway", "CH": "switzerland", "TR": "turkey",
-    "RS": "serbia", "US": "united states", "CA": "canada", "AU": "australia",
-    "JP": "japan", "KR": "south korea", "CN": "china", "SG": "singapore",
-    "IN": "india", "NZ": "new zealand", "ZA": "south africa", "IL": "israel",
-    "BR": "brazil",
-}
-
-_UK_ALIASES: frozenset[str] = frozenset({"uk", "united kingdom", "great britain", "england", "scotland", "wales"})
-
-_EUROPEAN_CC: frozenset[str] = frozenset({
-    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
-    "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK",
-    "SI", "ES", "SE", "GB", "IS", "NO", "CH", "TR", "RS",
-})
+from agent.search.scrapers.base import (
+    BaseScraper,
+    _CC_COUNTRY,
+    _EUROPEAN_CC,
+    _MAX_RESULTS,
+    _UK_ALIASES,
+)
 
 
 class NatureCareersScraper(BaseScraper):
-    """Scrapes nature.com/careers with keyword search and client-side location filter."""
+    """Scrapes nature.com/careers with keyword search and client-side location filter.
+
+    The parsing below is generic to the Madgex job-board platform
+    (``li.lister__item`` cards).  Other boards on the same platform only need
+    to override ``name``, ``_ORIGIN`` and ``_SEARCH_URL`` — see
+    :class:`~agent.search.scrapers.science_careers.ScienceCareersScraper`.
+    """
 
     name = "nature.com/careers"
 
+    _ORIGIN: ClassVar[str] = "https://www.nature.com"
+    _SEARCH_URL: ClassVar[str] = (
+        "https://www.nature.com/naturecareers/jobs/search/?q={q}&pageSize={n}"
+    )
+
     def scrape(self, field: str, location: str, position_type: str) -> list[dict]:
-        url = (
-            f"https://www.nature.com/naturecareers/jobs/search/"
-            f"?q={quote_plus(field)}&pageSize=25"
-        )
+        url = self._SEARCH_URL.format(q=quote_plus(field), n=_MAX_RESULTS)
         soup = self._fetch(url)
         if soup is None:
             return []
@@ -54,7 +44,7 @@ class NatureCareersScraper(BaseScraper):
         canonical_loc = "united kingdom" if loc_lower in _UK_ALIASES else loc_lower
 
         listings: list[dict] = []
-        for item in soup.select("li.lister__item")[:25]:
+        for item in soup.select("li.lister__item")[:_MAX_RESULTS]:
             title_el = item.select_one("h3.lister__header a")
             if not title_el:
                 continue
@@ -62,7 +52,7 @@ class NatureCareersScraper(BaseScraper):
             href = title_el.get("href", "").strip()
             if not href:
                 continue
-            full_url = ("https://www.nature.com" + href) if href.startswith("/") else href
+            full_url = (self._ORIGIN + href) if href.startswith("/") else href
 
             loc_el = item.select_one(".lister__meta-item--location")
             loc_text = loc_el.get_text(strip=True) if loc_el else ""

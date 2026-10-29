@@ -53,8 +53,10 @@ class AppConfig:
 
     # Generation settings
     max_tokens: int = 4096
+    llm_max_retries: int = 20   # retries on 429/5xx — the free tier is TPM-bound
+    llm_timeout: float = 120.0  # per-request timeout (seconds)
     default_model: str = field(
-        default_factory=lambda: os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+        default_factory=lambda: os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     )
 
     # Scraper behaviour
@@ -64,9 +66,7 @@ class AppConfig:
     # Freshness thresholds (used to label and filter results)
     recent_days: int = 30          # posted within N days → "Recent"
     deadline_warn_days: int = 14   # deadline within N days → "Closing soon"
-
-    # UI defaults
-    min_score_default: int = 60    # default minimum match score slider value
+    stale_days: int = 365          # posted more than N days ago → excluded
 
     # Output directory for saved applications
     output_dir: str = field(default_factory=lambda: os.getenv("OUTPUT_DIR", "./output"))

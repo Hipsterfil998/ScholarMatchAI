@@ -1,5 +1,6 @@
 """Tests for JobMatcher — mocks LLM to test scoring logic without API calls."""
 
+import json
 from unittest.mock import MagicMock
 import pytest
 from agent.matching.matcher import JobMatcher, _fallback, _phd_status
@@ -224,3 +225,26 @@ class TestFallback:
         assert fb["recommendation"] == "skip"
         assert "test error" in fb["concerns"]
         assert isinstance(fb["matching_areas"], list)
+
+
+class TestScoringFailureIsDistinguishable:
+    """A rate-limited position must not look like a genuine 0% match: the UI
+    filters on match_score, so without a flag it vanished without a trace."""
+
+    def test_llm_failure_sets_the_flag(self):
+        matcher = _make_matcher(RuntimeError("Groq inference failed: 429"))
+        result = matcher.score(JOB, PROFILE)
+        assert result["scoring_failed"] is True
+        assert result["match_score"] == 0
+
+    def test_malformed_json_sets_the_flag(self):
+        matcher = _make_matcher("not json at all")
+        result = matcher.score(JOB, PROFILE)
+        assert result["scoring_failed"] is True
+
+    def test_successful_score_does_not_set_the_flag(self):
+        matcher = _make_matcher(json.dumps(
+            {"match_score": 0, "recommendation": "skip"}
+        ))
+        result = matcher.score(JOB, PROFILE)
+        assert not result.get("scoring_failed")

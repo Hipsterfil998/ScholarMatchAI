@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import time
 from datetime import datetime
@@ -9,17 +10,25 @@ from typing import TypedDict
 
 from agent.search.scrapers import (
     EuraxessScraper,
+    JobRxivScraper,
     JobsAcUkScraper,
-    MLScientistScraper,
     NatureCareersScraper,
-    ScholarshipDbScraper,
+    ScienceCareersScraper,
 )
-from agent.search.scrapers.base import BaseScraper, _DELAY
+from agent.search.scrapers.base import (
+    BaseScraper,
+    _DELAY,
+    _EUROPEAN_COUNTRIES,
+    _UK_ALIASES,
+)
 
 
 from config import config as _cfg
 _RECENT_DAYS = _cfg.recent_days
 _DEADLINE_WARN_DAYS = _cfg.deadline_warn_days
+_STALE_DAYS = _cfg.stale_days
+
+_log = logging.getLogger(__name__)
 
 
 class JobListing(TypedDict, total=False):
@@ -36,8 +45,9 @@ class JobListing(TypedDict, total=False):
     type: str
 
 
-_UK_LOCATIONS = {"uk", "united kingdom", "great britain", "england", "scotland", "wales"}
+_UK_LOCATIONS = _UK_ALIASES
 _WORLDWIDE_LOCATIONS = {"worldwide", "anywhere", "any", "global", ""}
+_EUROPEAN_LOCATIONS = _EUROPEAN_COUNTRIES | {"europe", "europe (all)"}
 
 
 class JobSearcher:
@@ -46,11 +56,17 @@ class JobSearcher:
     Sources
     -------
     - Euraxess — EU/worldwide research portal
-    - mlscientist.com — ML/AI academic positions
-    - jobs.ac.uk — UK academic jobs (only when UK/worldwide location is selected)
+    - jobRxiv — global research board, read through its REST API
+    - nature.com/careers — multidisciplinary global board
+    - jobs.ac.uk — UK academic jobs (only for UK/worldwide searches)
+    - Science Careers — US-dominated STEM board (only for non-European searches)
 
-    All scrapers are fault-tolerant: if one source is down the rest continue.
+    All scrapers are fault-tolerant: if one source is down the rest continue,
+    and the names of the failed sources are reported in ``failed_sources``.
     """
+
+    def __init__(self) -> None:
+        self.failed_sources: list[str] = []
 
     def search(
         self,
@@ -68,7 +84,9 @@ class JobSearcher:
 
         Returns:
             Deduplicated list of :class:`JobListing` dicts, richer entries first.
+            Sources that raised are recorded in :attr:`failed_sources`.
         """
+        self.failed_sources = []
         pt = (position_type or "phd").lower()
         location = self._normalize_location(location)
 
@@ -78,9 +96,17 @@ class JobSearcher:
         all_listings: list[dict] = []
         for scraper in scrapers:
             try:
-                all_listings.extend(scraper.scrape(field, location, pt))
-            except Exception:
-                pass
+                found = scraper.scrape(field, location, pt)
+            except Exception as exc:
+                # One dead board must not fail the whole search, but it must
+                # not vanish either: a silent `pass` here made every scraper
+                # outage look like "no positions found".
+                self.failed_sources.append(scraper.name)
+                _log.warning("Scraper %s failed: %s", scraper.name, exc)
+            else:
+                if not found:
+                    _log.info("Scraper %s returned no listings", scraper.name)
+                all_listings.extend(found)
             time.sleep(_DELAY)
 
         all_listings = self._deduplicate(all_listings)
@@ -95,7 +121,10 @@ class JobSearcher:
         if pt != "any":
             all_listings = [
                 j for j in all_listings
-                if j.get("type") == pt or j.get("type") == "other"
+                if j.get("type") == pt
+                or BaseScraper._matches_type(
+                    j.get("title") or "", j.get("description") or "", pt
+                )
             ]
 
         now = datetime.now()
@@ -118,12 +147,20 @@ class JobSearcher:
     def _build_scrapers(location: str) -> list[BaseScraper]:
         scrapers: list[BaseScraper] = [
             EuraxessScraper(),
-            MLScientistScraper(),
-            ScholarshipDbScraper(),
+            JobRxivScraper(),
             NatureCareersScraper(),
         ]
-        if location.lower() in _UK_LOCATIONS or location.lower() in _WORLDWIDE_LOCATIONS:
+        loc = location.lower()
+        if loc in _UK_LOCATIONS or loc in _WORLDWIDE_LOCATIONS:
             scrapers.insert(0, JobsAcUkScraper())
+        # "uk"/"england"/… are European but are not country names themselves
+        if loc in _UK_LOCATIONS:
+            loc = "united kingdom"
+        # Science Careers is US-dominated and often omits the country code its
+        # location filter needs, so it would leak US results into a European
+        # search. Enable it only where its catalogue is actually relevant.
+        if loc in _WORLDWIDE_LOCATIONS or loc not in _EUROPEAN_LOCATIONS:
+            scrapers.append(ScienceCareersScraper())
         return scrapers
 
     @staticmethod
@@ -131,12 +168,15 @@ class JobSearcher:
         """Return True if the job is clearly outdated and should be excluded.
 
         A job is stale if:
-        - Its posting date is parsed and falls in a previous year, OR
+        - Its posting date is parsed and is more than ``stale_days`` old, OR
         - Its deadline is parsed and has already passed.
         Jobs with no date information are kept (benefit of the doubt).
+
+        The age is measured in days rather than calendar years: comparing years
+        dropped every still-open position from December as soon as January began.
         """
         posted = BaseScraper._parse_date(job.get("posted"))
-        if posted is not None and posted.year < now.year:
+        if posted is not None and (now.date() - posted.date()).days > _STALE_DAYS:
             return True
         deadline = BaseScraper._parse_date(job.get("deadline"))
         if deadline is not None and deadline.date() < now.date():
